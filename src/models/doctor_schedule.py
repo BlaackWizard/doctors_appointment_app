@@ -15,3 +15,4 @@ class DoctorScheduleModel(Base):
     is_available = Column(Boolean, default=True)
 
     doctor = relationship("UserModel", back_populates="schedules")
+    appointments = relationship("AppointmentModel", back_populates="schedule")

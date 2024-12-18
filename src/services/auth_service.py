@@ -64,6 +64,28 @@ async def get_current_doctor(token: str = Depends(get_token)):
     return user
 
 
+async def get_current_user(token: str = Depends(get_token)):
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+    except JWTError as e:
+        print(f"JWTError: {e}")
+        raise TokenIsNotValidException()
+
+    expire: int = payload.get("exp")
+    if not expire or int(expire) < int(datetime.now().timestamp()):
+        raise TokenExpiredException()
+
+    user_id: str = payload.get("sub")
+    if not user_id:
+        raise
+
+    user = await UserRepo.find_one(id=int(user_id))
+    if not user:
+        raise UserNotFoundOrUserIsNotDoctorException()
+
+    return user
+
+
 @dataclass
 class UserAuth:
     repo: BaseRepo
