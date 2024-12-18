@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "doctors-appointment"
+version = "0.1.0"
+description = ""
+authors = ["BlaackWizard <kabynks@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = {extras = ["all"], version = "^0.115.6"}
+asyncpg = "^0.30.0"
+sqlalchemy = "^2.0.36"
+pydantic = "^2.10.3"
+alembic = "^1.14.0"
+uvicorn = "^0.34.0"
+pre-commit = "^4.0.1"
+pydantic-settings = "^2.7.0"
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
+bcrypt = "^4.2.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
