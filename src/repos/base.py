@@ -8,6 +8,10 @@ class BaseRepo(ABC):
         ...
 
     @classmethod
+    async def find_all_by_filters(cls, **filters):
+        ...
+
+    @classmethod
     async def add(cls, **data):
         ...
 

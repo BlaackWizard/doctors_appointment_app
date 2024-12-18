@@ -1,3 +1,5 @@
+from fastapi import HTTPException, status
+
 from src.exceptions.base import ApplicationException
 
 
@@ -10,5 +12,4 @@ class NotFoundScheduleException(ApplicationException):
 class SlotIsOccupiedException(ApplicationException):
     @property
     def message(self):
-        return 'Этот слот уже занят'
-
+        return HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Этот слот уже занят')

@@ -1,10 +1,13 @@
-from datetime import datetime
+from datetime import datetime, time
+from typing import Literal
+
 from pydantic import BaseModel
 
 
 class SScheduleCreate(BaseModel):
-    doctor_id: int
-    date: datetime
+    day_of_week: Literal["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
+    start_time: time
+    end_time: time
 
 
 class SAppointmentCreate(BaseModel):

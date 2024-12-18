@@ -1,14 +1,18 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from jose import jwt
+from fastapi import Depends, HTTPException, Request, status
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from src.config import settings
-from src.exceptions.auth.not_found_user import \
-    NotFoundUserExceptionOrIncorrectPassword
-from src.exceptions.auth.user_already_exists import UserAlreadyExistsException
+from src.exceptions.auth.token import (TokenExpiredException,
+                                       TokenIsNotValidException)
+from src.exceptions.auth.user import (NotFoundUserExceptionOrIncorrectPassword,
+                                      UserAlreadyExistsException,
+                                      UserNotFoundOrUserIsNotDoctorException)
 from src.repos.base import BaseRepo
+from src.repos.user import UserRepo
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -29,6 +33,35 @@ def create_access_token(data: dict) -> str:
         to_encode, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM,
     )
     return encoded_jwt
+
+
+def get_token(request: Request):
+    token = request.cookies.get("user_access_token")
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="не найден токен")
+    return token
+
+
+async def get_current_doctor(token: str = Depends(get_token)):
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+    except JWTError as e:
+        print(f"JWTError: {e}")
+        raise TokenIsNotValidException()
+
+    expire: int = payload.get("exp")
+    if not expire or int(expire) < int(datetime.now().timestamp()):
+        raise TokenExpiredException()
+
+    user_id: str = payload.get("sub")
+    if not user_id:
+        raise
+
+    user = await UserRepo.find_one(id=int(user_id))
+    if not user or str(user.role) != "doctor":
+        raise UserNotFoundOrUserIsNotDoctorException()
+
+    return user
 
 
 @dataclass
@@ -55,7 +88,7 @@ class UserAuth:
             phone_number=user_data.phone_number,
             role=user_data.role,
         )
-        return 'Пользователь успешно зарегистрирован'
+        return "Пользователь успешно создан, теперь войдите в систему"
 
     async def login_user(self, user_data):
         user = await self.authenticate(user_data.email, user_data.password)
