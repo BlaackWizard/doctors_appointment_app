@@ -1,5 +1,5 @@
-from .sqlalchemy import SQLAlchemyRepo
 from ..models.user import UserModel
+from .sqlalchemy import SQLAlchemyRepo
 
 
 class UserRepo(SQLAlchemyRepo):

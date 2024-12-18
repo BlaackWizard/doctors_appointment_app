@@ -1,7 +1,6 @@
-from typing import Optional, Literal
-from pydantic import BaseModel, EmailStr, Field
+from typing import Literal
 
-from src.models.user import UserRoleEnum
+from pydantic import BaseModel, EmailStr
 
 
 class SUserRegister(BaseModel):

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Enum
+from sqlalchemy import Column, Enum, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.db.connect import Base
@@ -13,7 +13,7 @@ class UserRoleEnum(str, Enum):
 class UserModel(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True) # noqa
     full_name = Column(String, nullable=False)
     username = Column(String, nullable=False)
     phone_number = Column(String, nullable=False)
@@ -22,4 +22,3 @@ class UserModel(Base):
     role = Column(Enum('patient', 'doctor', 'admin', name='role_type'), default=UserRoleEnum.PATIENT)
 
     schedules = relationship("DoctorScheduleModel", back_populates="doctor", cascade="all, delete-orphan")
-

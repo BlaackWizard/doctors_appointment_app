@@ -1,7 +1,7 @@
-from sqlalchemy import select, insert
+from sqlalchemy import insert, select
 
-from .base import BaseRepo
 from ..db.connect import async_session_maker
+from .base import BaseRepo
 
 
 class SQLAlchemyRepo(BaseRepo):
@@ -34,4 +34,3 @@ class SQLAlchemyRepo(BaseRepo):
             query = insert(cls.model).values(**data)
             await session.execute(query)
             await session.commit()
-

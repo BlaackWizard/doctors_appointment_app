@@ -1,11 +1,12 @@
 from dataclasses import dataclass
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 from jose import jwt
 from passlib.context import CryptContext
 
 from src.config import settings
-from src.exceptions.auth.not_found_user import NotFoundUserExceptionOrIncorrectPassword
+from src.exceptions.auth.not_found_user import \
+    NotFoundUserExceptionOrIncorrectPassword
 from src.exceptions.auth.user_already_exists import UserAlreadyExistsException
 from src.repos.base import BaseRepo
 
@@ -25,7 +26,7 @@ def create_access_token(data: dict) -> str:
     expire = datetime.now() + timedelta(days=30)
     to_encode.update({"exp": int(expire.timestamp())})
     encoded_jwt = jwt.encode(
-        to_encode, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM
+        to_encode, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM,
     )
     return encoded_jwt
 
@@ -52,7 +53,7 @@ class UserAuth:
             hashed_password=hashed_password,
             full_name=user_data.full_name,
             phone_number=user_data.phone_number,
-            role=user_data.role
+            role=user_data.role,
         )
         return 'Пользователь успешно зарегистрирован'
 
