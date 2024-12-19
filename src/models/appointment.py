@@ -17,4 +17,3 @@ class AppointmentModel(Base):
 
     doctor = relationship("UserModel", foreign_keys=[doctor_id])
     patient = relationship("UserModel", foreign_keys=[patient_id])
-    schedule = relationship("DoctorScheduleModel", back_populates="appointments")

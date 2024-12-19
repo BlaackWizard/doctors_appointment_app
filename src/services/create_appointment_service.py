@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import date, time
 
 from src.exceptions.appointment.doctor import (
     NotFoundDoctorOrUserIsNotDoctorException, ThisIsNotYoursScheduleException)
@@ -42,6 +43,7 @@ class AppointmentService:
         schedule = await self.doctor_schedule_repo.add(
             doctor_id=doctor.id,
             day_of_week=doctor_data.day_of_week,
+            date=doctor_data.date,
             start_time=doctor_data.start_time,
             end_time=doctor_data.end_time,
         )
@@ -75,16 +77,30 @@ class AppointmentService:
 
         return 'Изменен статус слота'
 
-    async def show_all_schedules_doctors(self, doctor_id: int):
-        slots = await self.doctor_schedule_repo.find_all_by_filters(doctor_id=doctor_id)
+    async def show_all_schedules_doctors(self, doctor_id: int, date: date, start_time: time, end_time: time):
+        if start_time or end_time is None:
+
+            slots = await self.doctor_schedule_repo.find_all_by_filters(
+                doctor_id=doctor_id,
+                date=date,
+                is_available=True,
+            )
+        else:
+            slots = await self.doctor_schedule_repo.find_all_by_filters(
+                doctor_id=doctor_id,
+                date=date,
+                start_time=start_time,
+                end_time=end_time,
+                is_available=True,
+            )
         formatted_schedule = format_schedule(slots)
-        return {"Расписание": formatted_schedule}
+        return {"Свободные слоты": formatted_schedule}
 
     async def show_all_appointments(self, user_id: int):
         appointments = await self.appointment_repo.find_all_by_filters(patient_id=user_id)
         return await self.format_appointment(appointments)
 
-    async def create_appointment(self, doctor_data):
+    async def create_appointment(self, doctor_data, user_id):
         schedule = await self.doctor_schedule_repo.find_one(id=doctor_data.schedule_id)
         if not schedule:
             raise NotFoundScheduleException().message
@@ -94,11 +110,13 @@ class AppointmentService:
         if not await self.user_repo.find_one(id=doctor_data.doctor_id):
             raise NotFoundDoctorOrUserIsNotDoctorException().message
 
+        naive_datetime = doctor_data.date.replace(tzinfo=None)
+
         await self.appointment_repo.add(
             doctor_id=doctor_data.doctor_id,
-            patient_id=doctor_data.patient_id,
+            patient_id=user_id,
             schedule_id=doctor_data.schedule_id,
-            date=doctor_data.date,
+            date=naive_datetime,
         )
 
         await self.doctor_schedule_repo.schedule_is_not_available(schedule_id=doctor_data.schedule_id)

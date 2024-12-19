@@ -1,4 +1,5 @@
-from typing import Annotated
+from datetime import date, time
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Response
 
@@ -36,20 +37,31 @@ async def login_user_endpoint(
     return {"access_token": access_token}
 
 
-@router.get("/show-all-slots")
-async def show_all_slots(
-    doctor_id: int,
+@router.get("/show-all-slots/{doctor_id}/{date}")
+async def show_all_available_slots(
     appointment_services: Annotated[AppointmentService, Depends(appointment_service)],
+    doctor_id: int,
+    date: date,
+    start_time: Optional[time] = None,
+    end_time: Optional[time] = None,
 ):
-    return await appointment_services.show_all_schedules_doctors(doctor_id=doctor_id)
+    return await appointment_services.show_all_schedules_doctors(
+        doctor_id=doctor_id,
+        date=date,
+        start_time=start_time,
+        end_time=end_time,
+    )
 
 
-@router.post("/appointment-with-the-doctor")
+@router.post("/appointment-with-the-doctor/")
 async def appointment_with_the_doctor_endpoint(
     appointment_services: Annotated[AppointmentService, Depends(appointment_service)],
     doctor_data: SAppointmentCreate,
+    user: str = Depends(get_current_user),
+
 ):
-    await appointment_services.create_appointment(doctor_data)
+
+    await appointment_services.create_appointment(doctor_data, user.id)
     return 'Создана новая запись'
 
 

@@ -93,14 +93,14 @@ class UserAuth:
     async def authenticate(self, email: str, password: str):
         user = await self.repo.find_one(email=email)
         if not user or not verify_password(password, user.hashed_password):
-            raise NotFoundUserExceptionOrIncorrectPassword()
+            raise NotFoundUserExceptionOrIncorrectPassword().message
 
         return user
 
     async def register_user(self, user_data):
         existing_user = await self.repo.find_one(email=user_data.email)
         if existing_user:
-            raise UserAlreadyExistsException()
+            raise UserAlreadyExistsException().message
         hashed_password = get_password_hash(user_data.password)
         await self.repo.add(
             email=user_data.email,
