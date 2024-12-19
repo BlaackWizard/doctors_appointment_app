@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, time
+from datetime import time
 
 from src.exceptions.appointment.doctor import (
     NotFoundDoctorOrUserIsNotDoctorException, ThisIsNotYoursScheduleException)
@@ -43,7 +43,6 @@ class AppointmentService:
         schedule = await self.doctor_schedule_repo.add(
             doctor_id=doctor.id,
             day_of_week=doctor_data.day_of_week,
-            date=doctor_data.date,
             start_time=doctor_data.start_time,
             end_time=doctor_data.end_time,
         )
@@ -61,7 +60,6 @@ class AppointmentService:
                 "patient_id": appointment.patient_id,
                 "doctor_id": appointment.doctor_id,
                 "doctor_fullname": doctor.full_name,
-                "created_at": appointment.date,
             })
         return dict(slots)
 
@@ -77,18 +75,18 @@ class AppointmentService:
 
         return 'Изменен статус слота'
 
-    async def show_all_schedules_doctors(self, doctor_id: int, date: date, start_time: time, end_time: time):
-        if start_time or end_time is None:
+    async def show_all_schedules_doctors(self, doctor_id: int, day_of_week: str, start_time: time, end_time: time):
+        if start_time is None or end_time is None:
 
             slots = await self.doctor_schedule_repo.find_all_by_filters(
                 doctor_id=doctor_id,
-                date=date,
+                day_of_week=day_of_week,
                 is_available=True,
             )
         else:
             slots = await self.doctor_schedule_repo.find_all_by_filters(
                 doctor_id=doctor_id,
-                date=date,
+                day_of_week=day_of_week,
                 start_time=start_time,
                 end_time=end_time,
                 is_available=True,
@@ -100,7 +98,7 @@ class AppointmentService:
         appointments = await self.appointment_repo.find_all_by_filters(patient_id=user_id)
         return await self.format_appointment(appointments)
 
-    async def create_appointment(self, doctor_data, user_id):
+    async def create_appointment(self, doctor_data, user):
         schedule = await self.doctor_schedule_repo.find_one(id=doctor_data.schedule_id)
         if not schedule:
             raise NotFoundScheduleException().message
@@ -114,7 +112,7 @@ class AppointmentService:
 
         await self.appointment_repo.add(
             doctor_id=doctor_data.doctor_id,
-            patient_id=user_id,
+            patient_id=user.id,
             schedule_id=doctor_data.schedule_id,
             date=naive_datetime,
         )

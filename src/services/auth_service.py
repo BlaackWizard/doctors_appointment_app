@@ -59,7 +59,7 @@ async def get_current_doctor(token: str = Depends(get_token)):
 
     user = await UserRepo.find_one(id=int(user_id))
     if not user or str(user.role) != "doctor":
-        raise UserNotFoundOrUserIsNotDoctorException()
+        raise UserNotFoundOrUserIsNotDoctorException().message
 
     return user
 
