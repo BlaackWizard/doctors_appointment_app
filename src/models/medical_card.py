@@ -7,7 +7,7 @@ from src.db.connect import Base
 class MedicalCardModel(Base):
     __tablename__ = "medical_cards"
 
-    id = Column(Integer, primary_key=True) # noqa
+    id = Column(Integer, primary_key=True)  # noqa
     patient_id = Column(Integer, ForeignKey('users.id'))
     doctor_id = Column(Integer, ForeignKey('users.id'))
     doctor_fullname = Column(String, nullable=False)
@@ -24,11 +24,12 @@ class MedicalCardModel(Base):
 class Visits(Base):
     __tablename__ = "visits"
 
-    id = Column(Integer, primary_key=True) # noqa
+    id = Column(Integer, primary_key=True)  # noqa
     visit_date = Column(Date)
     doctor_name = Column(String)
     notes = Column(Text)
-    medical_card_id = Column(Integer, ForeignKey("medical_cards.id"))
+    patient_id = Column(Integer, ForeignKey("users.id"))
+    medical_card_id = Column(Integer, ForeignKey("medical_cards.id"), nullable=True)
 
     medical_card = relationship("MedicalCardModel", back_populates="visits")
 
@@ -65,6 +66,7 @@ class Procedure(Base):
     description = Column(Text)
     date = Column(Date, nullable=False)
     doctor_id = Column(Integer, ForeignKey('users.id'))
+    doctor_fullname = Column(String)
     medical_card_id = Column(Integer, ForeignKey('medical_cards.id'))
 
     medical_card = relationship("MedicalCardModel", back_populates="procedures")

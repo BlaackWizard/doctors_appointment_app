@@ -6,7 +6,7 @@ from src.exceptions.base import ApplicationException
 class NotFoundUserException(ApplicationException):
     @property
     def message(self):
-        return HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Пользователь не найден')
+        return HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Данный пользователь не найден в базе данных')
 
 
 class NotFoundUserExceptionOrIncorrectPassword(ApplicationException):
@@ -14,20 +14,23 @@ class NotFoundUserExceptionOrIncorrectPassword(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Неправильный логин или пароль, проверьте имя пользователя и пароль',
+            detail='Неправильная почта или пароль, проверьте почту и пароль',
         )
 
 
 class NotFoundUserByIDException(ApplicationException):
     @property
     def message(self):
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Не найден врач по этому id')
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Не найден врач по этому ID')
 
 
 class UserAlreadyExistsException(ApplicationException):
     @property
     def message(self):
-        return HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Пользователь с данным именем уже существует')
+        return HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='Пользователь с данным логином уже существует',
+        )
 
 
 class UserNotFoundOrUserIsNotDoctorException(ApplicationException):
@@ -35,5 +38,15 @@ class UserNotFoundOrUserIsNotDoctorException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Пользователь не найден в базе данных или пользователь не является доктором",
+            detail="Врач не найден в базе данных или пользователь не является врачом. "
+                   "Пожалуйста войди в систему как врач",
+        )
+
+
+class UserNotPatientException(ApplicationException):
+    @property
+    def message(self):
+        return HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Данный пользователь не является пациентом, пожалуйста зарегистрируйтесь и потом войдите в систему',
         )

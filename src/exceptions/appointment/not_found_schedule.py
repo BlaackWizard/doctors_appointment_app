@@ -13,3 +13,9 @@ class SlotIsOccupiedException(ApplicationException):
     @property
     def message(self):
         return HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Этот слот уже занят')
+
+
+class ThisScheduleAlreadyExistsException(ApplicationException):
+    @property
+    def message(self):
+        return HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Этот слот уже есть в вашем расписаний!')

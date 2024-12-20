@@ -15,8 +15,8 @@ class UserModel(Base):
 
     id = Column(Integer, primary_key=True) # noqa
     full_name = Column(String, nullable=False)
-    username = Column(String, nullable=False)
-    phone_number = Column(String, nullable=False)
+    username = Column(String, nullable=False, unique=True)
+    phone_number = Column(String, nullable=False, unique=True)
     email = Column(String, nullable=False, unique=True)
     hashed_password = Column(String, nullable=False)
     role = Column(Enum('patient', 'doctor', 'admin', name='role_type'), default=UserRoleEnum.PATIENT)

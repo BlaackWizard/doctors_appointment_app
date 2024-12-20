@@ -1,15 +1,15 @@
 import re
 from typing import Literal
 
-from pydantic import BaseModel, EmailStr, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class SUserRegister(BaseModel):
-    email: EmailStr
-    password: str
-    full_name: str
-    username: str
-    phone_number: str
+    email: EmailStr = Field(alias="Эл.почта")
+    password: str = Field(alias="Пароль")
+    full_name: str = Field(alias="ФИО")
+    username: str = Field(alias="Логин")
+    phone_number: str = Field(alias="Номер телефона")
     role: Literal["patient", "doctor", "admin"] = "patient"
 
     @model_validator(mode="after")
@@ -21,5 +21,5 @@ class SUserRegister(BaseModel):
 
 
 class SUserLogin(BaseModel):
-    email: EmailStr
-    password: str
+    email: EmailStr = Field(alias="Эл.почта")
+    password: str = Field(alias="Пароль")

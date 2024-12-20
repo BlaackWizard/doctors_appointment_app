@@ -6,10 +6,12 @@ from src.services.create_appointment_service import AppointmentService
 
 from ...models.user import UserModel
 from ...schemas.appointment import SScheduleCreate
-from ...schemas.medical_card import SDiagnosis, SVisits
+from ...schemas.medical_card import SDiagnosis, STests, SVisits
 from ...services.auth_service import get_current_doctor
-from ...services.medical_card_service import DiagnoseService, VisitService
-from .dependencies import appointment_service, diagnose_service, visit_service
+from ...services.medical_card_service import (AnalyzeService, DiagnoseService,
+                                              VisitService)
+from .dependencies import (appointment_service, diagnose_service,
+                           procedure_service, visit_service)
 
 router = APIRouter(prefix='/doctors', tags=['Врачи'])
 
@@ -50,3 +52,19 @@ async def create_visit_endpoint(
     user: UserModel = Depends(get_current_doctor),
 ):
     return await visit_service.create_visit(doctor_id=user.id, visit_data=visit_data)
+
+
+@router.post("/create-procedure")
+async def create_procedure_endpoint(
+    test_data: STests,
+    user_id: int,
+    procedure_service: Annotated[AnalyzeService, Depends(procedure_service)],
+    doctor: UserModel = Depends(get_current_doctor),
+
+):
+
+    return await procedure_service.create_procedure(
+        user_id=user_id,
+        doctor=doctor,
+        test_data=test_data,
+    )

@@ -1,12 +1,16 @@
+import datetime
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import time
 
 from src.exceptions.appointment.doctor import (
-    NotFoundDoctorOrUserIsNotDoctorException, ThisIsNotYoursScheduleException)
+    NotFoundDoctorOrUserIsNotDoctorException, ThisIsAnotherDoctorException,
+    ThisIsNotYoursScheduleException)
 from src.exceptions.appointment.not_found_schedule import (
-    NotFoundScheduleException, SlotIsOccupiedException)
+    NotFoundScheduleException, SlotIsOccupiedException,
+    ThisScheduleAlreadyExistsException)
 from src.exceptions.auth.user import NotFoundUserByIDException
+from src.exceptions.medical_card.card import YouAreNotDoctorException
 from src.repos.base import BaseRepo
 
 
@@ -40,6 +44,15 @@ class AppointmentService:
         if not doctor:
             raise NotFoundUserByIDException().message
 
+        schedule = await self.doctor_schedule_repo.find_one(
+            doctor_id=doctor.id,
+            day_of_week=doctor_data.day_of_week,
+            start_time=doctor_data.start_time,
+            end_time=doctor_data.end_time,
+        )
+        if schedule:
+            raise ThisScheduleAlreadyExistsException().message
+
         schedule = await self.doctor_schedule_repo.add(
             doctor_id=doctor.id,
             day_of_week=doctor_data.day_of_week,
@@ -60,6 +73,7 @@ class AppointmentService:
                 "patient_id": appointment.patient_id,
                 "doctor_id": appointment.doctor_id,
                 "doctor_fullname": doctor.full_name,
+                "status": appointment.status,
             })
         return dict(slots)
 
@@ -71,11 +85,14 @@ class AppointmentService:
         if schedule.doctor_id != doctor.id:
             raise ThisIsNotYoursScheduleException().message
 
-        await self.doctor_schedule_repo.schedule_is_not_available(schedule_id)
+        await self.doctor_schedule_repo.schedule_change_status(schedule_id=schedule_id, status=False)
 
         return 'Изменен статус слота'
 
     async def show_all_schedules_doctors(self, doctor_id: int, day_of_week: str, start_time: time, end_time: time):
+        if not await self.user_repo.find_one(id=doctor_id, role='doctor'):
+            raise YouAreNotDoctorException().message
+
         if start_time is None or end_time is None:
 
             slots = await self.doctor_schedule_repo.find_all_by_filters(
@@ -98,7 +115,7 @@ class AppointmentService:
         appointments = await self.appointment_repo.find_all_by_filters(patient_id=user_id)
         return await self.format_appointment(appointments)
 
-    async def create_appointment(self, doctor_data, user):
+    async def create_appointment(self, doctor_data, user_id):
         schedule = await self.doctor_schedule_repo.find_one(id=doctor_data.schedule_id)
         if not schedule:
             raise NotFoundScheduleException().message
@@ -108,15 +125,20 @@ class AppointmentService:
         if not await self.user_repo.find_one(id=doctor_data.doctor_id):
             raise NotFoundDoctorOrUserIsNotDoctorException().message
 
-        naive_datetime = doctor_data.date.replace(tzinfo=None)
+        if doctor_data.doctor_id != schedule.doctor_id:
+            raise ThisIsAnotherDoctorException().message
+
+        date_create_visit = datetime.datetime.now()
+        naive_datetime = date_create_visit.replace(tzinfo=None)
 
         await self.appointment_repo.add(
             doctor_id=doctor_data.doctor_id,
-            patient_id=user.id,
+            patient_id=user_id,
             schedule_id=doctor_data.schedule_id,
             date=naive_datetime,
+            status="ожидание",
         )
 
-        await self.doctor_schedule_repo.schedule_is_not_available(schedule_id=doctor_data.schedule_id)
+        await self.doctor_schedule_repo.schedule_change_status(schedule_id=doctor_data.schedule_id, status=False)
 
         return 'Запись успешно создана'

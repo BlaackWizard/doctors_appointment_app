@@ -13,7 +13,7 @@ class AppointmentModel(Base):
     patient_id = Column(Integer, ForeignKey("users.id"))
 
     date = Column(DateTime)
-    status = Column(Enum('ожидание', 'подтверждено', 'отменено', name="appointment_status"))
+    status = Column(Enum('ожидание', 'подтверждено', 'отменено', name="appointment_status"), nullable=False)
 
     doctor = relationship("UserModel", foreign_keys=[doctor_id])
     patient = relationship("UserModel", foreign_keys=[patient_id])

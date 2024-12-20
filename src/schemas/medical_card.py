@@ -1,20 +1,19 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SDiagnosis(BaseModel):
-    medical_card_id: int
-    diagnosis_text: str
-    recommendation: str
-    date: date
+    diagnosis_text: str = Field(alias="Текст диагноза")
+    recommendation: str = Field(alias="Рекомендаций")
+    patient_id: int = Field(alias='ID пациента')
 
 
 class SDiagnosisResponse(BaseModel):
-    id: int # noqa
+    diagnosis_id: int  # noqa
     diagnosis_text: str
-    recommendation: Optional[str]
+    recommendation: Optional[str] = None
     medical_card_id: int
 
     class Config:
@@ -22,17 +21,17 @@ class SDiagnosisResponse(BaseModel):
 
 
 class SVisits(BaseModel):
-    medical_card_id: int
-    visit_date: date
-    doctor_name: str
-    notes: Optional[str] = None
+    patient_id: int
+    visit_date: date = Field(alias="Дата визита")
 
 
 class STests(BaseModel):
-    test_name: str
-    result: str
-    medical_card_id: str
+    procedure_name: str = Field(alias="Название процедуры")
+    description: str = Field(alias="Описание процедуры")
+    notes: Optional[str] = Field(alias='Дополнительные комментарии', default=None)
 
 
-class STestsResponse(STests):
-    file: str
+class SCreateMedicalCard(BaseModel):
+    doctor_id: int = Field("ID врача")
+    birth_day: date = Field("Дата рождения")
+    contacts: str = Field("Контакты")

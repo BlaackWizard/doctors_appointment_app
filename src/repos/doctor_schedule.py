@@ -9,8 +9,8 @@ class DoctorScheduleRepo(SQLAlchemyRepo):
     model = DoctorScheduleModel
 
     @classmethod
-    async def schedule_is_not_available(cls, schedule_id):
+    async def schedule_change_status(cls, schedule_id: int, status: bool):
         async with async_session_maker() as session:
-            query = update(cls.model).where(cls.model.id == schedule_id).values(is_available=False)
+            query = update(cls.model).where(cls.model.id == schedule_id).values(is_available=status)
             await session.execute(query)
             await session.commit()
