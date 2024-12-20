@@ -8,7 +8,11 @@ from src.db.connect import Base
 from src.models.user import UserModel
 from src.models.appointment import AppointmentModel
 from src.models.doctor_schedule import DoctorScheduleModel
-from src.models.medical_card import Diagnosis, Test, MedicalCardModel, Procedure
+from src.models.medical_card import MedicalCardModel
+from src.models.analyzes import Analyzes
+from src.models.diagnosis import Diagnosis
+from src.models.procedure import Procedure
+from src.models.visits import Visits
 from alembic import context
 
 # this is the Alembic Config object, which provides

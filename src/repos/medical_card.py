@@ -1,8 +1,11 @@
 from sqlalchemy import update
 
 from src.db.connect import async_session_maker
-from src.models.medical_card import (Diagnosis, MedicalCardModel, Procedure,
-                                     Test, Visits)
+from src.models.analyzes import Analyzes
+from src.models.diagnosis import Diagnosis
+from src.models.medical_card import MedicalCardModel
+from src.models.procedure import Procedure
+from src.models.visits import Visits
 from src.repos.sqlalchemy import SQLAlchemyRepo
 
 
@@ -25,8 +28,8 @@ class DiagnosisRepo(SQLAlchemyRepo):
     model = Diagnosis
 
 
-class TestsRepo(SQLAlchemyRepo):
-    model = Test
+class AnalyzeRepo(SQLAlchemyRepo):
+    model = Analyzes
 
 
 class ProcedureRepo(SQLAlchemyRepo):

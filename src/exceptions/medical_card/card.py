@@ -35,7 +35,7 @@ class PatientDoctorConflictException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail='Пациент не завершал прием у врача с данным ID. Посетите врача и после вы можете создать мед.карту',
+            detail='Пациент не посетил данного врача, пройдите обследование и можете создать свою мед.карту',
         )
 
 

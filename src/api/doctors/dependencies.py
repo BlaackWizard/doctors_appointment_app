@@ -1,7 +1,7 @@
 from src.repos.appointment import AppointmentRepo
 from src.repos.doctor_schedule import DoctorScheduleRepo
-from src.repos.medical_card import (DiagnosisRepo, MedicalCardRepo,
-                                    ProcedureRepo, TestsRepo, VisitsRepo)
+from src.repos.medical_card import (AnalyzeRepo, DiagnosisRepo,
+                                    MedicalCardRepo, ProcedureRepo, VisitsRepo)
 from src.repos.user import UserRepo
 from src.services.create_appointment_service import AppointmentService
 from src.services.medical_card_service import (AnalyzeService, DiagnoseService,
@@ -46,7 +46,7 @@ def visit_service():
 def procedure_service():
     return AnalyzeService(
         medical_card_repo=MedicalCardRepo,
-        test_repo=TestsRepo,
+        test_repo=AnalyzeRepo,
         procedure_repo=ProcedureRepo,
         user_repo=UserRepo,
     )

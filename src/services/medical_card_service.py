@@ -28,7 +28,7 @@ class MedicalCardService:
             raise YouAreNotPatientException().message
 
         if not doctor or doctor.role != "doctor":
-            raise YouAreNotDoctorException().message
+            raise ThisUserIsNotDoctorException().message
 
         appointment = await self.appointment_repo.find_one(
             patient_id=patient_id,
