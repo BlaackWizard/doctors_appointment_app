@@ -1,7 +1,7 @@
+from sqlalchemy import Column, Date, ForeignKey, Integer, Text
 from sqlalchemy.orm import relationship
 
 from src.db.connect import Base
-from sqlalchemy import Column, Text, Integer, ForeignKey, Date
 
 
 class Diagnosis(Base):
@@ -14,4 +14,3 @@ class Diagnosis(Base):
     date = Column(Date)
 
     medical_card = relationship("MedicalCardModel", back_populates="diagnosis")
-

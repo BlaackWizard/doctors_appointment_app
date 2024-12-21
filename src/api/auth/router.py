@@ -2,9 +2,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
 
-from src.schemas.auth import SUserRegister, SUserLogin
-from src.services.auth_service import UserAuth
 from src.api.patients.dependencies import user_services
+from src.schemas.auth import SUserLogin, SUserRegister
+from src.services.auth_service import UserAuth
 
 router = APIRouter(prefix='/auth', tags=['Регистрация и авторизация'])
 

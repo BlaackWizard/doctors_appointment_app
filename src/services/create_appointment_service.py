@@ -6,11 +6,12 @@ from datetime import time
 from src.exceptions.appointment.doctor import (
     NotFoundDoctorOrUserIsNotDoctorException, ThisIsAnotherDoctorException,
     ThisIsNotYoursScheduleException)
-from src.exceptions.appointment.not_found_schedule import (
+from src.exceptions.appointment.schedule import (
+    DoctorCanNotChangeHisSlotWhilePatientsNotDoneTheirAppointmentException,
     NotFoundScheduleException, SlotIsOccupiedException,
     ThisScheduleAlreadyExistsException)
 from src.exceptions.auth.user import NotFoundUserByIDException
-from src.exceptions.medical_card.card import YouAreNotDoctorException
+from src.exceptions.user.roles import YouAreNotDoctorException
 from src.repos.base import BaseRepo
 
 
@@ -60,6 +61,30 @@ class AppointmentService:
             end_time=doctor_data.end_time,
         )
         return schedule
+
+    async def check_schedule(self, doctor, schedule_id):
+        schedule = await self.doctor_schedule_repo.find_one(id=schedule_id)
+        if not schedule:
+            raise NotFoundScheduleException().message
+
+        if schedule.doctor_id != doctor.id:
+            raise ThisIsNotYoursScheduleException().message
+
+        appointments = await self.appointment_repo.find_all_by_filters(schedule_id=schedule_id)
+        if appointments:
+            raise DoctorCanNotChangeHisSlotWhilePatientsNotDoneTheirAppointmentException().message
+        return True
+
+    async def update_schedule(self, doctor, doctor_data, schedule_id):
+        check = await self.check_schedule(doctor=doctor, schedule_id=schedule_id)
+        if check:
+            await self.doctor_schedule_repo.update(
+                model_id=schedule_id,
+                day_of_week=doctor_data.day_of_week,
+                start_time=doctor_data.start_time,
+                end_time=doctor_data.end_time,
+            )
+            return 'Обновлены данные слота'
 
     async def format_appointment(self, appointments):
         slots = defaultdict(list)
@@ -142,3 +167,11 @@ class AppointmentService:
         await self.doctor_schedule_repo.schedule_change_status(schedule_id=doctor_data.schedule_id, status=False)
 
         return 'Запись успешно создана'
+
+    async def my_appointments(self, doctor_id):
+        doctor = await self.user_repo.find_one(id=doctor_id, role='doctor')
+        if not doctor:
+            raise NotFoundDoctorOrUserIsNotDoctorException().message
+
+        appointments = await self.appointment_repo.find_all_by_filters(doctor_id=doctor_id, status='ожидание')
+        return appointments

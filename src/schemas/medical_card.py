@@ -25,7 +25,7 @@ class SVisits(BaseModel):
     visit_date: date = Field(alias="Дата визита")
 
 
-class STests(BaseModel):
+class SProcedure(BaseModel):
     procedure_name: str = Field(alias="Название процедуры")
     description: str = Field(alias="Описание процедуры")
     notes: Optional[str] = Field(alias='Дополнительные комментарии', default=None)

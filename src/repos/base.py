@@ -22,3 +22,7 @@ class BaseRepo(ABC):
     @classmethod
     async def find_one(cls, **filters):
         ...
+
+    @classmethod
+    async def update(cls, model_id, **values):
+        ...

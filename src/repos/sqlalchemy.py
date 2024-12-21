@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 
 from ..db.connect import async_session_maker
 from .base import BaseRepo
@@ -39,5 +39,12 @@ class SQLAlchemyRepo(BaseRepo):
     async def add(cls, **data):
         async with async_session_maker() as session:
             query = insert(cls.model).values(**data)
+            await session.execute(query)
+            await session.commit()
+
+    @classmethod
+    async def update(cls, model_id, **values):
+        async with async_session_maker() as session:
+            query = update(cls.model).where(cls.model.id == model_id).values(**values)
             await session.execute(query)
             await session.commit()

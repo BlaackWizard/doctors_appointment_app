@@ -3,10 +3,11 @@ from src.repos.doctor_schedule import DoctorScheduleRepo
 from src.repos.medical_card import (AnalyzeRepo, DiagnosisRepo,
                                     MedicalCardRepo, ProcedureRepo, VisitsRepo)
 from src.repos.user import UserRepo
+from src.services.analyze_service import AnalyzeService
 from src.services.create_appointment_service import AppointmentService
-from src.services.medical_card_service import (AnalyzeService, DiagnoseService,
-                                               MedicalCardService,
-                                               VisitService)
+from src.services.diagnose_service import DiagnoseService
+from src.services.medical_card_service import MedicalCardService
+from src.services.visit_service import VisitService
 
 
 def appointment_service():
