@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
     API_PORT: int
+    DOMAIN: str
 
     class Config:
         env_file = ".env"

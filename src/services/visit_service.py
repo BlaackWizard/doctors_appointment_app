@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 from src.exceptions.auth.user import UserNotPatientException
-from src.exceptions.medical_card.visit import BeforeCreateVisitPatientMustCreateAppointmentException
+from src.exceptions.medical_card.visit import \
+    BeforeCreateVisitPatientMustCreateAppointmentException
 from src.exceptions.user.roles import YouAreNotDoctorException
 from src.repos.base import BaseRepo
 

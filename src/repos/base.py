@@ -26,3 +26,7 @@ class BaseRepo(ABC):
     @classmethod
     async def update(cls, model_id, **values):
         ...
+
+    @classmethod
+    async def delete_one(cls, model_id):
+        ...

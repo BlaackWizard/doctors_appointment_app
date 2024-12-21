@@ -2,9 +2,12 @@ from dataclasses import dataclass
 from datetime import date
 
 from src.exceptions.auth.user import UserNotPatientException
-from src.exceptions.medical_card.card import NotFoundMedicalCardException, ThisIsNotYourMedicalCardException
-from src.exceptions.medical_card.procedure import NotFoundProcedureException, ThisIsNotYourProcedureException, \
-    ProcedureMedicalCardIsDifferentWithUserMedicalCardException
+from src.exceptions.medical_card.card import (
+    NotFoundMedicalCardException, ThisIsNotYourMedicalCardException)
+from src.exceptions.medical_card.procedure import (
+    NotFoundProcedureException,
+    ProcedureMedicalCardIsDifferentWithUserMedicalCardException,
+    ThisIsNotYourProcedureException)
 from src.repos.base import BaseRepo
 
 
@@ -78,6 +81,6 @@ class AnalyzeService:
                 date=check,
                 doctor_id=doctor.id,
                 doctor_fullname=doctor.full_name,
-                medical_card_id=medical_card.id
+                medical_card_id=medical_card.id,
             )
             return 'Обновлены данные процедуры'

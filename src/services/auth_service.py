@@ -1,18 +1,21 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, Response, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from src.config import settings
+from src.exceptions.appointment.appointment import NotFoundAppointmentException
 from src.exceptions.auth.token import (TokenExpiredException,
                                        TokenIsNotValidException)
-from src.exceptions.auth.user import (NotFoundUserExceptionOrIncorrectPassword,
+from src.exceptions.auth.user import (NotFoundUserException,
+                                      NotFoundUserExceptionOrIncorrectPassword,
                                       UserAlreadyExistsException,
                                       UserNotFoundOrUserIsNotDoctorException)
 from src.repos.base import BaseRepo
 from src.repos.user import UserRepo
+from src.tasks.token import decode_url_safe_token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -89,6 +92,7 @@ async def get_current_user(token: str = Depends(get_token)):
 @dataclass
 class UserAuth:
     repo: BaseRepo
+    appointment_repo: BaseRepo
 
     async def authenticate(self, email: str, password: str):
         user = await self.repo.find_one(email=email)
@@ -116,3 +120,24 @@ class UserAuth:
         user = await self.authenticate(user_data.email, user_data.password)
         access_token = create_access_token({"sub": str(user.id)})
         return access_token
+
+    async def verify_token(self, token: str):
+        token_data = decode_url_safe_token(token)
+
+        user_email = token_data.get('email')
+        appointment_id = token_data.get('appointment_id')
+
+        if user_email and appointment_id:
+            user = await self.repo.find_one(email=user_email)
+            appointment = await self.appointment_repo.find_one(id=appointment_id)
+            if not user:
+                raise NotFoundUserException().message
+
+            if not appointment:
+                raise NotFoundAppointmentException().message
+
+            await self.appointment_repo.update(model_id=appointment.id, is_verified=True)
+
+            return Response('The appointment verified successful!')
+
+        return Response("Произошла ошибка")

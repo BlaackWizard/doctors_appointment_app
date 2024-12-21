@@ -1,36 +1,57 @@
-import logging
-import smtplib
-from email.message import EmailMessage
+import asyncio
+from datetime import timedelta
 
-from celery import shared_task
+from fastapi_mail import FastMail, MessageSchema
 
-from src.utils.config_email import email_settings
+from src.utils.config_email import conf
 
-logger = logging.getLogger(__name__)
+from .celery import celery_app
 
 
-@shared_task
-def send_email(to_email: str, subject: str, body: str):
-    try:
-        logger.info(f"Отправка письма на {to_email} с темой: {subject}")
-        smtp_server = email_settings.SMTP_SERVER
-        smtp_port = email_settings.SMTP_PORT
-        smtp_user = email_settings.SMTP_USER
-        smtp_password = email_settings.SMTP_PASS
+@celery_app.task
+def send_confirmation_email(patient_email, html_message):
+    asyncio.run(_send_confirmation_email(patient_email, html_message))
+    return f"Письмо подтверждения отправлено на {patient_email}"
 
-        msg = EmailMessage()
-        msg["From"] = smtp_user
-        msg["To"] = to_email
-        msg["Subject"] = subject
-        msg.set_content(body)
 
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.send_message(msg)
+async def _send_confirmation_email(patient_email, html_message):
+    message = MessageSchema(
+        subject="Подтверждение записи",
+        recipients=[patient_email],
+        body=html_message,
+    )
+    fm = FastMail(conf)
+    await fm.send_message(message)
 
-        logger.info(f"Письмо успешно отправлено на {to_email}")
-        return f"Письмо отправлено на {to_email}"
-    except Exception as e:
-        logger.error(f"Ошибка при отправке письма: {e}")
-        return f"Не удалось отправить письмо: {e}"
+
+@celery_app.task
+def send_reminder_email(patient_email, appointment_date, reminder_time):
+    asyncio.run(_send_reminder_email(patient_email, appointment_date, reminder_time))
+    return f"Напоминание отправлено на {patient_email}"
+
+
+async def _send_reminder_email(patient_email, appointment_date, reminder_time):
+    message = MessageSchema(
+        subject="Напоминание о записи",
+        recipients=[patient_email],
+        body=f"Напоминаем, что ваша запись состоится {appointment_date}. Осталось {reminder_time}.",
+        subtype="plain",
+    )
+    fm = FastMail(conf)
+    await fm.send_message(message)
+
+
+def schedule_appointment_notifications(appointment, patient_email):
+    send_confirmation_email.delay(patient_email, appointment.date)
+
+    reminder_24h_time = appointment.date - timedelta(hours=24)
+    send_reminder_email.apply_async(
+        (appointment.patient_email, appointment.date, "24 часа"),
+        eta=reminder_24h_time,
+    )
+
+    reminder_1h_time = appointment.date - timedelta(hours=1)
+    send_reminder_email.apply_async(
+        (appointment.patient_email, appointment.date, "1 час"),
+        eta=reminder_1h_time,
+    )

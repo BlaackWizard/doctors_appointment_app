@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from datetime import date
 
-from src.exceptions.medical_card.card import NotFoundMedicalCardException, ThisIsNotYourMedicalCardException
-from src.exceptions.medical_card.diagnose import NotFoundDiagnoseException, \
-    DiagnoseMedicalCardIsDifferentWithUsersMedicalCardException
+from src.exceptions.medical_card.card import (
+    NotFoundMedicalCardException, ThisIsNotYourMedicalCardException)
+from src.exceptions.medical_card.diagnose import (
+    DiagnoseMedicalCardIsDifferentWithUsersMedicalCardException,
+    NotFoundDiagnoseException)
 from src.repos.base import BaseRepo
 from src.schemas.medical_card import SDiagnosis
 

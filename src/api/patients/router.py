@@ -35,8 +35,7 @@ async def appointment_with_the_doctor_endpoint(
 
 ):
 
-    await appointment_services.create_appointment(doctor_data, user.id)
-    return 'Создана новая запись'
+    return await appointment_services.create_appointment(doctor_data, user.id)
 
 
 @router.post("/history-appointments")
@@ -77,3 +76,18 @@ async def change_doctor_endpoint(
     user: str = Depends(get_current_user),
 ):
     return await med_services.change_doctor_in_medical_card(doctor_id=doctor_id, user=user)
+
+
+@router.post(
+    "/cancel-appointment",
+    description="Отменяет ваш запись к врачу, отменять можно только свои записи",
+)
+async def cancel_appointment_endpoint(
+    appointment_id: int,
+    appointment_services: Annotated[AppointmentService, Depends(appointment_service)],
+    user: str = Depends(get_current_user),
+):
+    return await appointment_services.cancel_appointment(
+        user_id=user.id,
+        appointment_id=appointment_id,
+    )

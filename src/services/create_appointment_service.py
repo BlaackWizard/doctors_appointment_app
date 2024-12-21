@@ -3,6 +3,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import time
 
+from src.config import settings
+from src.exceptions.appointment.appointment import (
+    AppointmentAlreadyExistsException, NotFoundAppointmentException)
 from src.exceptions.appointment.doctor import (
     NotFoundDoctorOrUserIsNotDoctorException, ThisIsAnotherDoctorException,
     ThisIsNotYoursScheduleException)
@@ -13,6 +16,8 @@ from src.exceptions.appointment.schedule import (
 from src.exceptions.auth.user import NotFoundUserByIDException
 from src.exceptions.user.roles import YouAreNotDoctorException
 from src.repos.base import BaseRepo
+from src.tasks.send_email import send_confirmation_email
+from src.tasks.token import create_url_safe_token
 
 
 def format_schedule(slots):
@@ -99,6 +104,7 @@ class AppointmentService:
                 "doctor_id": appointment.doctor_id,
                 "doctor_fullname": doctor.full_name,
                 "status": appointment.status,
+                "is_verified": appointment.is_verified,
             })
         return dict(slots)
 
@@ -142,6 +148,9 @@ class AppointmentService:
 
     async def create_appointment(self, doctor_data, user_id):
         schedule = await self.doctor_schedule_repo.find_one(id=doctor_data.schedule_id)
+        user = await self.user_repo.find_one(id=user_id)
+        doctor = await self.user_repo.find_one(id=doctor_data.doctor_id, role='doctor')
+
         if not schedule:
             raise NotFoundScheduleException().message
         if not schedule.is_available:
@@ -153,20 +162,41 @@ class AppointmentService:
         if doctor_data.doctor_id != schedule.doctor_id:
             raise ThisIsAnotherDoctorException().message
 
+        exists_appointment = await self.appointment_repo.find_one(
+            doctor_id=doctor_data.doctor_id,
+            patient_id=user.id,
+            schedule_id=doctor_data.schedule_id,
+        )
+        if exists_appointment:
+            raise AppointmentAlreadyExistsException().message
+
         date_create_visit = datetime.datetime.now()
+
         naive_datetime = date_create_visit.replace(tzinfo=None)
 
         await self.appointment_repo.add(
             doctor_id=doctor_data.doctor_id,
-            patient_id=user_id,
+            patient_id=user.id,
             schedule_id=doctor_data.schedule_id,
             date=naive_datetime,
             status="ожидание",
         )
+        appointment = await self.appointment_repo.find_one(
+            doctor_id=doctor_data.doctor_id,
+            patient_id=user.id,
+            schedule_id=doctor_data.schedule_id,
+            status="ожидание",
+        )
 
-        await self.doctor_schedule_repo.schedule_change_status(schedule_id=doctor_data.schedule_id, status=False)
+        token = create_url_safe_token({'email': user.email, 'appointment_id': appointment.id})
 
-        return 'Запись успешно создана'
+        link = f"http://{settings.DOMAIN}/auth/verify/{token}"
+        html_message = f"""
+            <h1>Привет! Ты отправил запрос на запись к врачу {doctor.full_name}</h1>
+            <p>Чтобы подтвердить запись, перейди по этой ссылке: <a href="{link}">ссылка</a></p>
+        """
+        send_confirmation_email.delay(patient_email=user.email, html_message=html_message)
+        return f'Создана новая запись, мы отправили вам на почту ссылку на подтверждение записи к {doctor.full_name}'
 
     async def my_appointments(self, doctor_id):
         doctor = await self.user_repo.find_one(id=doctor_id, role='doctor')
@@ -175,3 +205,12 @@ class AppointmentService:
 
         appointments = await self.appointment_repo.find_all_by_filters(doctor_id=doctor_id, status='ожидание')
         return appointments
+
+    async def cancel_appointment(self, user_id, appointment_id):
+
+        appointment = await self.appointment_repo.find_one(id=appointment_id, patient_id=user_id, status='ожидание')
+        if not appointment:
+            raise NotFoundAppointmentException().message
+
+        await self.appointment_repo.update(model_id=appointment_id, status='отменено')
+        return 'Запись к врачу отменено'

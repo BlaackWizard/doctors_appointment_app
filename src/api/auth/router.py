@@ -30,3 +30,11 @@ async def login_user_endpoint(
     response.set_cookie("user_access_token", access_token, httponly=True)
 
     return {"access_token": access_token}
+
+
+@router.get('/verify/{token}')
+async def verify_appointment(
+    token: str,
+    user_services: Annotated[UserAuth, Depends(user_services)],
+):
+    return await user_services.verify_token(token)
