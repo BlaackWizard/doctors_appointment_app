@@ -12,7 +12,7 @@ class AppointmentModel(Base):
     schedule_id = Column(Integer, ForeignKey("doctor_schedule.id"))
     patient_id = Column(Integer, ForeignKey("users.id"))
 
-    date = Column(DateTime)
+    date = Column(DateTime, nullable=False)
     status = Column(Enum('ожидание', 'подтверждено', 'отменено', name="appointment_status"), nullable=False)
     is_verified = Column(Boolean, default=False)
 

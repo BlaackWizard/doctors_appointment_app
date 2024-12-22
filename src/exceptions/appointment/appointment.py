@@ -8,7 +8,7 @@ class NotFoundAppointmentException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Не удалось найти запись по этому ID. Проверьте еще раз ID записи'
+            detail='Не удалось найти запись по этому ID. Проверьте еще раз ID записи',
         )
 
 
@@ -17,5 +17,5 @@ class AppointmentAlreadyExistsException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail='У вас уже запланирована эта запись'
+            detail='У вас уже запланирована эта запись',
         )

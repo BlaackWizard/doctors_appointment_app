@@ -25,6 +25,7 @@ aiohttp = "^3.11.11"
 flower = "^2.0.1"
 fastapi-mail = "^1.4.2"
 itsdangerous = "^2.2.0"
+qrcode = {extras = ["pil"], version = "^8.0"}
 
 
 [build-system]

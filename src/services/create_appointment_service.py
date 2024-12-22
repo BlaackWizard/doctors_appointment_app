@@ -1,4 +1,3 @@
-import datetime
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import time
@@ -17,7 +16,7 @@ from src.exceptions.auth.user import NotFoundUserByIDException
 from src.exceptions.user.roles import YouAreNotDoctorException
 from src.repos.base import BaseRepo
 from src.tasks.send_email import send_confirmation_email
-from src.tasks.token import create_url_safe_token
+from src.tasks.tasks_token import create_url_safe_token
 
 
 def format_schedule(slots):
@@ -170,15 +169,11 @@ class AppointmentService:
         if exists_appointment:
             raise AppointmentAlreadyExistsException().message
 
-        date_create_visit = datetime.datetime.now()
-
-        naive_datetime = date_create_visit.replace(tzinfo=None)
-
         await self.appointment_repo.add(
             doctor_id=doctor_data.doctor_id,
             patient_id=user.id,
             schedule_id=doctor_data.schedule_id,
-            date=naive_datetime,
+            date=doctor_data.date_appointment,
             status="ожидание",
         )
         appointment = await self.appointment_repo.find_one(

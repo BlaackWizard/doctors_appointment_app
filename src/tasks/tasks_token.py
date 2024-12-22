@@ -1,12 +1,12 @@
 import logging
 
 from itsdangerous import URLSafeTimedSerializer
+
 from src.utils.config_email import settings
 
-
 serializer = URLSafeTimedSerializer(
-        secret_key=settings.JWT_SECRET_KEY, salt='email-configuration'
-    )
+        secret_key=settings.JWT_SECRET_KEY, salt='email-configuration',
+)
 
 
 def create_url_safe_token(data: dict):

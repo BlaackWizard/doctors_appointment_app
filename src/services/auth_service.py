@@ -7,15 +7,16 @@ from passlib.context import CryptContext
 
 from src.config import settings
 from src.exceptions.appointment.appointment import NotFoundAppointmentException
-from src.exceptions.auth.token import (TokenExpiredException,
-                                       TokenIsNotValidException)
+from src.exceptions.auth.auth_token import (TokenExpiredException,
+                                            TokenIsNotValidException)
 from src.exceptions.auth.user import (NotFoundUserException,
                                       NotFoundUserExceptionOrIncorrectPassword,
                                       UserAlreadyExistsException,
                                       UserNotFoundOrUserIsNotDoctorException)
 from src.repos.base import BaseRepo
 from src.repos.user import UserRepo
-from src.tasks.token import decode_url_safe_token
+from src.tasks.send_email import send_reminder_email
+from src.tasks.tasks_token import decode_url_safe_token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -93,6 +94,7 @@ async def get_current_user(token: str = Depends(get_token)):
 class UserAuth:
     repo: BaseRepo
     appointment_repo: BaseRepo
+    doctor_schedule_repo: BaseRepo
 
     async def authenticate(self, email: str, password: str):
         user = await self.repo.find_one(email=email)
@@ -138,6 +140,17 @@ class UserAuth:
 
             await self.appointment_repo.update(model_id=appointment.id, is_verified=True)
 
-            return Response('The appointment verified successful!')
+            schedule = await self.doctor_schedule_repo.find_one(id=appointment.schedule_id)
+
+            await self.doctor_schedule_repo.update(model_id=schedule.id, status=False)
+
+            appointment_time = appointment.date - timedelta(hours=24)
+
+            send_reminder_email.apply_async(
+                args=[user_email, appointment.date, "24 часа"],
+                eta=appointment_time,
+            )
+
+            return Response('The appointment verified successfully!')
 
         return Response("Произошла ошибка")

@@ -13,6 +13,10 @@ from src.models.analyzes import Analyzes
 from src.models.diagnosis import Diagnosis
 from src.models.procedure import Procedure
 from src.models.visits import Visits
+from src.models.wallet import Wallet
+from src.models.services import Services
+from src.models.payment import Payment
+
 from alembic import context
 
 # this is the Alembic Config object, which provides
