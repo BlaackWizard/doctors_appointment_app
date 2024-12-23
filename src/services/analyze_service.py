@@ -1,86 +1,55 @@
+import os
+import uuid
+from fastapi import HTTPException
 from dataclasses import dataclass
-from datetime import date
 
-from src.exceptions.auth.user import UserNotPatientException
-from src.exceptions.medical_card.card import (
-    NotFoundMedicalCardException, ThisIsNotYourMedicalCardException)
-from src.exceptions.medical_card.procedure import (
-    NotFoundProcedureException,
-    ProcedureMedicalCardIsDifferentWithUserMedicalCardException,
-    ThisIsNotYourProcedureException)
+from src.exceptions.medical_card.card import NotFoundMedicalCardException, ThisIsNotYourMedicalCardException
 from src.repos.base import BaseRepo
+from src.schemas.analyze import SAnalyzeRequest
+from src.utils.aws_connect import s3
+from src.utils.config_aws import settings
 
 
 @dataclass
 class AnalyzeService:
-    test_repo: BaseRepo
-    procedure_repo: BaseRepo
-    medical_card_repo: BaseRepo
+    analyze_repo: BaseRepo
     user_repo: BaseRepo
+    medical_card_repo: BaseRepo
 
-    async def create_procedure(self, user_id: int, doctor, procedure_data):
-        user = await self.user_repo.find_one(id=user_id)
+    async def add_analyze(self, doctor_id: int, analyze_data: SAnalyzeRequest):
 
-        if user.role != 'patient':
-            raise UserNotPatientException().message
-
-        medical_card = await self.medical_card_repo.find_one(patient_id=user.id)
+        medical_card = await self.medical_card_repo.find_one(id=analyze_data.medical_card_id)
         if not medical_card:
             raise NotFoundMedicalCardException().message
 
-        if user_id != medical_card.patient_id:
+        if doctor_id != medical_card.doctor_id:
             raise ThisIsNotYourMedicalCardException().message
 
-        if doctor.id != medical_card.doctor_id:
-            raise ThisIsNotYourMedicalCardException().message
+        file_extension = os.path.splitext(analyze_data.file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
 
-        await self.procedure_repo.add(
-            procedure_name=procedure_data.procedure_name,
-            description=procedure_data.description,
-            date=date.today(),
-            doctor_id=doctor.id,
-            doctor_fullname=doctor.full_name,
-            medical_card_id=medical_card.id,
+        temp_dir = "temp"
+        os.makedirs(temp_dir, exist_ok=True)
+        file_location = f"{temp_dir}/{unique_filename}"
+        with open(file_location, "wb") as f:
+            f.write(await analyze_data.file.read())
+
+        safe_filename = uuid.uuid4().hex + file_extension
+
+        s3.upload_file(
+            Filename=file_location,
+            Bucket=settings.BUCKET_NAME,
+            Key=f"uploads/{safe_filename}"
         )
-        return 'Анализы успешно созданы'
 
-    async def check_procedure(self, user_id: int, doctor_id: int, procedure_id):
-        procedure = await self.procedure_repo.find_one(id=procedure_id)
+        os.remove(file_location)
 
-        if not procedure:
-            raise NotFoundProcedureException().message
+        file_url = f"https://{settings.ENDPOINT_URL}/{settings.BUCKET_NAME}/uploads/{safe_filename}"
 
-        user = await self.user_repo.find_one(id=user_id, role='patient')
-
-        if not user:
-            raise UserNotPatientException().message
-
-        medical_card = await self.medical_card_repo.find_one(patient_id=user.id)
-
-        if doctor_id != procedure.doctor_id:
-            raise ThisIsNotYourProcedureException().message
-
-        if not medical_card:
-            raise NotFoundMedicalCardException().message
-
-        if procedure.medical_card_id != medical_card.id:
-            raise ProcedureMedicalCardIsDifferentWithUserMedicalCardException().message
-
-        return procedure.date
-
-    async def update_procedure(self, user_id: int, doctor, procedure_data, procedure_id: int):
-        check = await self.check_procedure(user_id=user_id, doctor_id=doctor.id, procedure_id=procedure_id)
-        if check:
-
-            medical_card = await self.medical_card_repo.find_one(patient_id=user_id)
-
-            await self.procedure_repo.update(
-                model_id=procedure_id,
-                procedure_name=procedure_data.procedure_name,
-                description=procedure_data.description,
-                date=check,
-                doctor_id=doctor.id,
-                doctor_fullname=doctor.full_name,
-                medical_card_id=medical_card.id,
-            )
-            return 'Обновлены данные процедуры'
+        await self.analyze_repo.add(
+            analyze_name=analyze_data.analyze_name,
+            result=analyze_data.result,
+            file=file_url,
+            medical_card_id=analyze_data.medical_card_id
+        )
+        return 'Успешно создан анализ'

@@ -8,7 +8,7 @@ class NotFoundWalletException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Не удалось найти ваш кошелек'
+            detail='Не удалось найти ваш кошелек',
         )
 
 
@@ -17,5 +17,5 @@ class WalletAlreadyExistsException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='У вас уже есть кошелек'
+            detail='У вас уже есть кошелек',
         )

@@ -1,14 +1,16 @@
 from dataclasses import dataclass
 
+from fastapi.responses import StreamingResponse
+
 from src.exceptions.auth.user import NotFoundUserException
-from src.exceptions.payment.payment import NotHaveEnoughMoneyException, NotFoundPaymentException, \
-    ThisIsNotYourReceiptException
+from src.exceptions.payment.payment import (NotFoundPaymentException,
+                                            NotHaveEnoughMoneyException,
+                                            ThisIsNotYourReceiptException)
 from src.exceptions.payment.service import NotFoundServiceException
 from src.exceptions.payment.wallet import NotFoundWalletException
 from src.repos.base import BaseRepo
-from src.schemas.payment import SPaymentRequest, SPaymentResponse
+from src.schemas.payment import SPaymentRequest
 from src.utils.generate_qr_code import generate_receipt
-from fastapi.responses import StreamingResponse
 
 
 @dataclass
@@ -45,13 +47,13 @@ class PaymentService:
             patient_id=user_id,
             service_id=payment_data.service_id,
             amount=service.cost,
-            is_paid=True
+            is_paid=True,
         )
         payment = await self.payment_repo.find_one(
             patient_id=user_id,
             service_id=payment_data.service_id,
             amount=service.cost,
-            is_paid=True
+            is_paid=True,
         )
         return await self.get_receipt(user_id=user_id, payment_id=payment.id)
 

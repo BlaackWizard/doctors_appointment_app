@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
-from src.exceptions.payment.wallet import NotFoundWalletException, WalletAlreadyExistsException
+from src.exceptions.payment.wallet import (NotFoundWalletException,
+                                           WalletAlreadyExistsException)
 from src.repos.base import BaseRepo
-from src.schemas.wallet import SWalletResponse, SWalletRequest
+from src.schemas.wallet import SWalletRequest, SWalletResponse
 
 
 @dataclass
@@ -19,7 +20,7 @@ class WalletService:
 
         return SWalletResponse(
             message='Ваш баланс пополнился!',
-            balance=balance
+            balance=balance,
         )
 
     async def create_wallet(self, user_id: int):
@@ -30,7 +31,7 @@ class WalletService:
 
         await self.wallet_repo.add(
             user_id=user_id,
-            balance=0.00
+            balance=0.00,
         )
         return 'Создан новый кошелек'
 
@@ -41,5 +42,5 @@ class WalletService:
 
         return SWalletResponse(
             message='Ваш баланс:',
-            balance=wallet.balance
+            balance=wallet.balance,
         )

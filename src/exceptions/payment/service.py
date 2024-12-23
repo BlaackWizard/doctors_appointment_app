@@ -8,7 +8,7 @@ class NotFoundServiceException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Не удалось найти услугу по такому ID'
+            detail='Не удалось найти услугу по такому ID',
         )
 
 
@@ -17,5 +17,5 @@ class CreateServiceCanOnlyAdminException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Услуги могут создавать только администраторы'
+            detail='Услуги могут создавать только администраторы',
         )

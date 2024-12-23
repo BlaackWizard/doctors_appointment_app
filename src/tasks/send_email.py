@@ -11,16 +11,16 @@ tz = pytz.timezone('Asia/Tashkent')
 
 
 @celery_app.task
-def send_confirmation_email(patient_email, html_message):
-    asyncio.run(_send_confirmation_email(patient_email, html_message))
+def send_confirmation_email(patient_email, message):
+    asyncio.run(_send_confirmation_email(patient_email, message))
     return f"Письмо подтверждения отправлено на {patient_email}"
 
 
-async def _send_confirmation_email(patient_email, html_message):
+async def _send_confirmation_email(patient_email, message):
     message = MessageSchema(
         subject="Подтверждение записи",
         recipients=[patient_email],
-        body=html_message,
+        body=message,
         subtype="plain",
     )
     fm = FastMail(conf)

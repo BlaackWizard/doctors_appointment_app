@@ -142,7 +142,7 @@ class UserAuth:
 
             schedule = await self.doctor_schedule_repo.find_one(id=appointment.schedule_id)
 
-            await self.doctor_schedule_repo.update(model_id=schedule.id, status=False)
+            await self.doctor_schedule_repo.update(model_id=schedule.id, is_available=False)
 
             appointment_time = appointment.date - timedelta(hours=24)
 

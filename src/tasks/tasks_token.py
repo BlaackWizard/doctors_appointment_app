@@ -1,6 +1,6 @@
 import logging
 
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from src.utils.config_email import settings
 
@@ -15,11 +15,14 @@ def create_url_safe_token(data: dict):
     return token
 
 
-def decode_url_safe_token(token: str):
+def decode_url_safe_token(token: str, max_age: int = 600):
     try:
-        token_data = serializer.loads(token)
-
+        token_data = serializer.loads(token, max_age=max_age)
         return token_data
-
+    except SignatureExpired:
+        logging.error("Токен истек")
+    except BadSignature:
+        logging.error("Неверный токен")
     except Exception as exc:
-        logging.error(str(exc))
+        logging.error(f"Другая ошибка: {str(exc)}")
+    return None

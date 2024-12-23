@@ -3,7 +3,6 @@ from src.repos.services import ServiceRepo
 from src.repos.user import UserRepo
 from src.repos.wallet import WalletRepo
 from src.services.payment_service import PaymentService
-from src.services.service_service import ServicesService
 from src.services.wallet_service import WalletService
 
 
@@ -16,5 +15,5 @@ def payment_services():
         user_repo=UserRepo,
         wallet_repo=WalletRepo,
         payment_repo=PaymentRepo,
-        service_repo=ServiceRepo
+        service_repo=ServiceRepo,
     )

@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Date, ForeignKey, Integer, String, Text, Float
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Float, ForeignKey, Integer
 
 from src.db.connect import Base
 
@@ -7,7 +6,7 @@ from src.db.connect import Base
 class Wallet(Base):
     __tablename__ = "wallet"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True) # noqa
+
     balance = Column(Float, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
-

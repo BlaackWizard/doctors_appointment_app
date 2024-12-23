@@ -7,6 +7,7 @@ from src.services.analyze_service import AnalyzeService
 from src.services.create_appointment_service import AppointmentService
 from src.services.diagnose_service import DiagnoseService
 from src.services.medical_card_service import MedicalCardService
+from src.services.procedure_service import ProcedureService
 from src.services.visit_service import VisitService
 
 
@@ -26,6 +27,7 @@ def medical_card_services():
         user_repo=UserRepo,
         procedure_repo=ProcedureRepo,
         appointment_repo=AppointmentRepo,
+        analyze_repo=AnalyzeRepo,
     )
 
 
@@ -45,9 +47,17 @@ def visit_service():
 
 
 def procedure_service():
-    return AnalyzeService(
+    return ProcedureService(
         medical_card_repo=MedicalCardRepo,
         test_repo=AnalyzeRepo,
         procedure_repo=ProcedureRepo,
         user_repo=UserRepo,
+    )
+
+
+def analyze_service():
+    return AnalyzeService(
+        user_repo=UserRepo,
+        medical_card_repo=MedicalCardRepo,
+        analyze_repo=AnalyzeRepo,
     )

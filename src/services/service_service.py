@@ -16,11 +16,11 @@ class ServicesService:
         await self.service_repo.add(
             title=service_data.title,
             cost=service_data.cost,
-            requisites=service_data.requisites
+            requisites=service_data.requisites,
         )
         return SServiceResponse(
             message="Услуга создана",
             title=service_data.title,
             cost=service_data.cost,
-            requisites=service_data.requisites
+            requisites=service_data.requisites,
         )

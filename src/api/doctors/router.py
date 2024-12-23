@@ -5,14 +5,16 @@ from fastapi import APIRouter, Depends
 from src.services.create_appointment_service import AppointmentService
 
 from ...models.user import UserModel
+from ...schemas.analyze import SAnalyzeRequest
 from ...schemas.appointment import SScheduleCreate
 from ...schemas.medical_card import SDiagnosis, SProcedure, SVisits
 from ...services.analyze_service import AnalyzeService
 from ...services.auth_service import get_current_doctor
 from ...services.diagnose_service import DiagnoseService
+from ...services.procedure_service import ProcedureService
 from ...services.visit_service import VisitService
-from .dependencies import (appointment_service, diagnose_service,
-                           procedure_service, visit_service)
+from .dependencies import (analyze_service, appointment_service,
+                           diagnose_service, procedure_service, visit_service)
 
 router = APIRouter(prefix='/doctors', tags=['Врачи'])
 
@@ -83,7 +85,7 @@ async def create_visit_endpoint(
 async def create_procedure_endpoint(
     procedure_data: SProcedure,
     user_id: int,
-    procedure_service: Annotated[AnalyzeService, Depends(procedure_service)],
+    procedure_service: Annotated[ProcedureService, Depends(procedure_service)],
     doctor: UserModel = Depends(get_current_doctor),
 
 ):
@@ -100,7 +102,7 @@ async def update_procedure_endpoint(
     procedure_data: SProcedure,
     procedure_id: int,
     user_id: int,
-    procedure_service: Annotated[AnalyzeService, Depends(procedure_service)],
+    procedure_service: Annotated[ProcedureService, Depends(procedure_service)],
     doctor: UserModel = Depends(get_current_doctor),
 ):
     await procedure_service.update_procedure(
@@ -109,6 +111,15 @@ async def update_procedure_endpoint(
         procedure_data=procedure_data,
         procedure_id=procedure_id,
     )
+
+
+@router.post('/create-analyze')
+async def create_analyze(
+    analyze_services: Annotated[AnalyzeService, Depends(analyze_service)],
+    analyze_data: SAnalyzeRequest = Depends(),
+    doctor: UserModel = Depends(get_current_doctor),
+):
+    return await analyze_services.add_analyze(doctor_id=doctor.id, analyze_data=analyze_data)
 
 
 @router.get("/my-appointments")

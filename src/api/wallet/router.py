@@ -4,10 +4,11 @@ from fastapi import APIRouter, Depends
 
 from src.services.auth_service import get_current_user
 from src.services.wallet_service import WalletService
-from .dependencies import wallet_services, payment_services
+
 from ...schemas.payment import SPaymentRequest
 from ...schemas.wallet import SWalletRequest
 from ...services.payment_service import PaymentService
+from .dependencies import payment_services, wallet_services
 
 router = APIRouter(prefix='/wallet', tags=['Кошелек'])
 

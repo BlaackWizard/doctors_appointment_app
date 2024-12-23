@@ -186,11 +186,11 @@ class AppointmentService:
         token = create_url_safe_token({'email': user.email, 'appointment_id': appointment.id})
 
         link = f"http://{settings.DOMAIN}/auth/verify/{token}"
-        html_message = f"""
-            <h1>Привет! Ты отправил запрос на запись к врачу {doctor.full_name}</h1>
-            <p>Чтобы подтвердить запись, перейди по этой ссылке: <a href="{link}">ссылка</a></p>
+        message = f"""
+            Привет! Ты отправил запрос на запись к врачу {doctor.full_name}
+            Чтобы подтвердить запись, перейди по этой ссылке: {link}
         """
-        send_confirmation_email.delay(patient_email=user.email, html_message=html_message)
+        send_confirmation_email.delay(patient_email=user.email, message=message)
         return f'Создана новая запись, мы отправили вам на почту ссылку на подтверждение записи к {doctor.full_name}'
 
     async def my_appointments(self, doctor_id):

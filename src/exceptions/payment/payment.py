@@ -8,7 +8,7 @@ class NotHaveEnoughMoneyException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='У вас недостаточно средств на вашем кошельке для того чтобы оплатить услугу'
+            detail='У вас недостаточно средств на вашем кошельке для того чтобы оплатить услугу',
         )
 
 
@@ -17,7 +17,7 @@ class NotFoundPaymentException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Платеж не найден'
+            detail='Платеж не найден',
         )
 
 
@@ -26,5 +26,5 @@ class ThisIsNotYourReceiptException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Это не ваш чек!'
+            detail='Это не ваш чек!',
         )

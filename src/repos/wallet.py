@@ -1,5 +1,4 @@
 from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from src.db.connect import async_session_maker
 from src.models.wallet import Wallet

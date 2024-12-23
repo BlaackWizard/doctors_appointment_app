@@ -1,18 +1,16 @@
-import qrcode
 from io import BytesIO
+
+import qrcode
 
 
 def generate_receipt(payment, service, patient, requisites):
-    data = (
-        f"""
-            Имя пациента: {patient.full_name}\n
-            Услуга: {service.title}\n
-            Стоимость: {service.cost}\n
-            Номер карты получателя: {requisites}\n 
-            Дата: {payment.date}\n
-        """
-    )
-
+    data = f"""
+Имя пациента: {patient.full_name}
+Услуга: {service.title}
+Стоимость: {service.cost}
+Номер карты получателя: {requisites}
+Дата: {payment.date}
+"""
     qr = qrcode.QRCode()
     qr.add_data(data)
     qr.make()

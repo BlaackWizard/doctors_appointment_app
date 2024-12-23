@@ -17,6 +17,7 @@ class MedicalCardService:
     visits_repo: BaseRepo
     procedure_repo: BaseRepo
     appointment_repo: BaseRepo
+    analyze_repo: BaseRepo
 
     async def create_medical_card(self, patient_id: int, doctor_id: int, birth_day: date, contacts: str):
         user = await self.user_repo.find_one(id=patient_id)
@@ -57,12 +58,14 @@ class MedicalCardService:
         diagnoses = await self.diagnosis_repo.find_all_by_filters(medical_card_id=medical_card.id)
         visits = await self.visits_repo.find_all_by_filters(patient_id=user_id)
         procedures = await self.procedure_repo.find_all_by_filters(medical_card_id=medical_card.id)
+        analyzes = await self.analyze_repo.find_all_by_filters(medical_card_id=medical_card.id)
 
         return {
             "Медицинская карта": medical_card,
             "Диагнозы": diagnoses,
             "Посещения": visits,
             "Процедуры": procedures,
+            'Анализы': analyzes,
         }
 
     async def change_doctor_in_medical_card(self, user, doctor_id):
