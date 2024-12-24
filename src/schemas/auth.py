@@ -1,4 +1,3 @@
-import re
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
@@ -14,9 +13,17 @@ class SUserRegister(BaseModel):
 
     @model_validator(mode="after")
     def validate_phone_number(cls, values):
-        phone_pattern = re.compile(r"^\+?[1-9]\d{1,14}$")
-        if not phone_pattern.match(values.phone_number):
-            raise ValueError("Неверный формат номера телефона. Ожидается формат например, +123456789.")
+        phone_number = values.phone_number
+
+        if len(phone_number) != 13:
+            raise ValueError("Номер телефона должен содержать 13 символов, включая код страны (+998).")
+
+        if not phone_number.startswith('+998'):
+            raise ValueError("Номер телефона должен начинаться с кода страны +998.")
+
+        if not phone_number[4:].isdigit():
+            raise ValueError("Номер телефона должен содержать только цифры после кода страны.")
+
         return values
 
 

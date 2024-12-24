@@ -7,6 +7,7 @@ from src.exceptions.user.roles import (PatientDoctorConflictException,
                                        ThisUserIsNotDoctorException,
                                        YouAreNotPatientException)
 from src.repos.base import BaseRepo
+from src.utils.pagination import paginate
 
 
 @dataclass
@@ -47,7 +48,7 @@ class MedicalCardService:
         )
         return 'Создана медицинская карта!'
 
-    async def get_medical_card(self, user_id: int):
+    async def get_medical_card(self, user_id: int, page: int = 1, limit: int = 10):
         medical_card = await self.medical_card_repo.find_one(patient_id=user_id)
         if not medical_card:
             raise NotFoundMedicalCardException().message
@@ -55,10 +56,30 @@ class MedicalCardService:
         if user_id != medical_card.patient_id:
             raise ThisIsNotYourMedicalCardException().message
 
-        diagnoses = await self.diagnosis_repo.find_all_by_filters(medical_card_id=medical_card.id)
-        visits = await self.visits_repo.find_all_by_filters(patient_id=user_id)
-        procedures = await self.procedure_repo.find_all_by_filters(medical_card_id=medical_card.id)
-        analyzes = await self.analyze_repo.find_all_by_filters(medical_card_id=medical_card.id)
+        diagnoses = await paginate(
+            self.diagnosis_repo.find_all_by_filters,
+            page,
+            limit,
+            medical_card_id=medical_card.id,
+        )
+        visits = await paginate(
+            self.visits_repo.find_all_by_filters,
+            page,
+            limit,
+            patient_id=user_id,
+        )
+        procedures = await paginate(
+            self.procedure_repo.find_all_by_filters,
+            page,
+            limit,
+            medical_card_id=medical_card.id,
+        )
+        analyzes = await paginate(
+            self.analyze_repo.find_all_by_filters,
+            page,
+            limit,
+            medical_card_id=medical_card.id,
+        )
 
         return {
             "Медицинская карта": medical_card,

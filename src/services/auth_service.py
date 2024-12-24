@@ -34,104 +34,57 @@ def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.now() + timedelta(days=30)
     to_encode.update({"exp": int(expire.timestamp())})
-    encoded_jwt = jwt.encode(
-        to_encode, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM,
-    )
-    return encoded_jwt
+    return jwt.encode(to_encode, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
 
 
 def get_token(request: Request):
     token = request.cookies.get("user_access_token")
     if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="не найден токен")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token not found")
     return token
 
 
-async def get_current_doctor(token: str = Depends(get_token)):
+def decode_jwt_token(token: str):
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
-    except JWTError as e:
-        print(f"JWTError: {e}")
+        return jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+    except JWTError:
         raise TokenIsNotValidException()
 
-    expire: int = payload.get("exp")
+
+def validate_token_expiry(expire: int):
     if not expire or int(expire) < int(datetime.now().timestamp()):
         raise TokenExpiredException()
 
-    user_id: str = payload.get("sub")
+
+async def get_user_by_token(token: str, role1: str = None, role2: str = None):
+    payload = decode_jwt_token(token)
+    validate_token_expiry(payload.get("exp"))
+
+    user_id = payload.get("sub")
     if not user_id:
-        raise
+        raise TokenIsNotValidException()
 
     user = await UserRepo.find_one(id=int(user_id))
-    if not user or str(user.role) != "doctor":
+    if not user or (role1 and str(user.role) != role1 or role2 and str(user.role) != role2):
         raise UserNotFoundOrUserIsNotDoctorException().message
-
-    return user
-
-
-async def get_current_doctor_or_admin(token: str = Depends(get_token)):
-    try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
-    except JWTError as e:
-        print(f"JWTError: {e}")
-        raise TokenIsNotValidException()
-
-    expire: int = payload.get("exp")
-    if not expire or int(expire) < int(datetime.now().timestamp()):
-        raise TokenExpiredException()
-
-    user_id: str = payload.get("sub")
-    if not user_id:
-        raise
-
-    user = await UserRepo.find_one(id=int(user_id))
-    if not user or str(user.role) != "doctor" or str(user.role) != 'admin':
-        raise UserNotFoundOrUserIsNotDoctorException().message
-
-    return user
-
-
-async def get_current_admin(token: str = Depends(get_token)):
-    try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
-    except JWTError as e:
-        print(f"JWTError: {e}")
-        raise TokenIsNotValidException()
-
-    expire: int = payload.get("exp")
-    if not expire or int(expire) < int(datetime.now().timestamp()):
-        raise TokenExpiredException()
-
-    user_id: str = payload.get("sub")
-    if not user_id:
-        raise
-
-    user = await UserRepo.find_one(id=int(user_id))
-    if not user or str(user.role) != "admin":
-        raise YouAreNotAdminException().message
 
     return user
 
 
 async def get_current_user(token: str = Depends(get_token)):
-    try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
-    except JWTError as e:
-        print(f"JWTError: {e}")
-        raise TokenIsNotValidException()
+    return await get_user_by_token(token)
 
-    expire: int = payload.get("exp")
-    if not expire or int(expire) < int(datetime.now().timestamp()):
-        raise TokenExpiredException()
 
-    user_id: str = payload.get("sub")
-    if not user_id:
-        raise
+async def get_current_doctor(token: str = Depends(get_token)):
+    return await get_user_by_token(token, role="doctor")
 
-    user = await UserRepo.find_one(id=int(user_id))
-    if not user:
-        raise UserNotFoundOrUserIsNotDoctorException()
 
+async def get_current_admin(token: str = Depends(get_token)):
+    return await get_user_by_token(token, role="admin")
+
+
+async def get_current_doctor_or_admin(token: str = Depends(get_token)):
+    user = await get_user_by_token(token, role1="doctor", role2="admin")
     return user
 
 
@@ -145,13 +98,12 @@ class UserAuth:
         user = await self.repo.find_one(username=username)
         if not user or not verify_password(password, user.hashed_password):
             raise NotFoundUserExceptionOrIncorrectPassword().message
-
         return user
 
     async def register_user(self, user_data):
-        existing_user = await self.repo.find_one(username=user_data.username)
-        if existing_user:
+        if await self.repo.find_one(username=user_data.username):
             raise UserAlreadyExistsException().message
+
         hashed_password = get_password_hash(user_data.password)
         await self.repo.add(
             email=user_data.email,
@@ -161,12 +113,11 @@ class UserAuth:
             phone_number=user_data.phone_number,
             role=user_data.role,
         )
-        return "Пользователь успешно создан, теперь войдите в систему"
+        return "User successfully registered, please log in."
 
     async def login_user(self, user_data):
         user = await self.authenticate(user_data.username, user_data.password)
-        access_token = create_access_token({"sub": str(user.id)})
-        return access_token
+        return create_access_token({"sub": str(user.id)})
 
     async def verify_token(self, token: str):
         token_data = decode_url_safe_token(token)
@@ -174,28 +125,26 @@ class UserAuth:
         user_email = token_data.get('email')
         appointment_id = token_data.get('appointment_id')
 
-        if user_email and appointment_id:
-            user = await self.repo.find_one(email=user_email)
-            appointment = await self.appointment_repo.find_one(id=appointment_id)
-            if not user:
-                raise NotFoundUserException().message
+        if not (user_email and appointment_id):
+            return Response("An error occurred.")
 
-            if not appointment:
-                raise NotFoundAppointmentException().message
+        user = await self.repo.find_one(email=user_email)
+        appointment = await self.appointment_repo.find_one(id=appointment_id)
 
-            await self.appointment_repo.update(model_id=appointment.id, is_verified=True)
+        if not user:
+            raise NotFoundUserException().message
+        if not appointment:
+            raise NotFoundAppointmentException().message
 
-            schedule = await self.doctor_schedule_repo.find_one(id=appointment.schedule_id)
+        await self.appointment_repo.update(model_id=appointment.id, is_verified=True)
 
-            await self.doctor_schedule_repo.update(model_id=schedule.id, is_available=False)
+        schedule = await self.doctor_schedule_repo.find_one(id=appointment.schedule_id)
+        await self.doctor_schedule_repo.update(model_id=schedule.id, is_available=False)
 
-            appointment_time = appointment.date - timedelta(hours=24)
+        appointment_time = appointment.date - timedelta(hours=24)
+        send_reminder_email.apply_async(
+            args=[user_email, appointment.date, "24 hours"],
+            eta=appointment_time,
+        )
 
-            send_reminder_email.apply_async(
-                args=[user_email, appointment.date, "24 часа"],
-                eta=appointment_time,
-            )
-
-            return Response('The appointment verified successfully!')
-
-        return Response("Произошла ошибка")
+        return Response('The appointment was successfully verified!')

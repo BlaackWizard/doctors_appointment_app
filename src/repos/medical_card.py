@@ -23,6 +23,13 @@ class MedicalCardRepo(SQLAlchemyRepo):
 class VisitsRepo(SQLAlchemyRepo):
     model = Visits
 
+    @classmethod
+    async def find_all_by_filters(cls, limit: int, offset: int, patient_id: int):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter(cls.model.patient_id == patient_id)
+            result = await session.execute(query.offset(offset).limit(limit))
+            return result.scalars().all()
+
 
 class DiagnosisRepo(SQLAlchemyRepo):
     model = Diagnosis
@@ -34,10 +41,31 @@ class DiagnosisRepo(SQLAlchemyRepo):
             result = await session.execute(query)
             return result.scalar()
 
+    @classmethod
+    async def find_all_by_filters(cls, limit: int, offset: int, medical_card_id: int):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter(cls.model.medical_card_id == medical_card_id)
+            result = await session.execute(query.offset(offset).limit(limit))
+            return result.scalars().all()
+
 
 class AnalyzeRepo(SQLAlchemyRepo):
     model = Analyzes
 
+    @classmethod
+    async def find_all_by_filters(cls, limit: int, offset: int, medical_card_id: int):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter(cls.model.medical_card_id == medical_card_id)
+            result = await session.execute(query.offset(offset).limit(limit))
+            return result.scalars().all()
+
 
 class ProcedureRepo(SQLAlchemyRepo):
     model = Procedure
+
+    @classmethod
+    async def find_all_by_filters(cls, limit: int, offset: int, medical_card_id: int):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter(cls.model.medical_card_id == medical_card_id)
+            result = await session.execute(query.offset(offset).limit(limit))
+            return result.scalars().all()

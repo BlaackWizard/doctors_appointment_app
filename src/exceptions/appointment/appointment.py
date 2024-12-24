@@ -17,5 +17,5 @@ class AppointmentAlreadyExistsException(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail='У вас уже запланирована эта запись',
+            detail='У вас уже запланирована запись',
         )

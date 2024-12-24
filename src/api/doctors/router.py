@@ -9,8 +9,7 @@ from ...schemas.analyze import SAnalyzeRequest
 from ...schemas.appointment import SScheduleCreate
 from ...schemas.medical_card import SDiagnosis, SProcedure, SVisits
 from ...services.analyze_service import AnalyzeService
-from ...services.auth_service import (get_current_admin, get_current_doctor,
-                                      get_current_doctor_or_admin)
+from ...services.auth_service import get_current_admin, get_current_doctor, get_current_doctor_or_admin
 from ...services.diagnose_service import DiagnoseService
 from ...services.procedure_service import ProcedureService
 from ...services.visit_service import VisitService
@@ -28,8 +27,7 @@ async def create_schedule_endpoint(
     user: UserModel = Depends(get_current_doctor_or_admin),
 ):
 
-    appointment = await appointment_service.create_schedule(doctor_id=doctor_id, user=user, doctor_data=doctor_data)
-    return appointment
+    return await appointment_service.create_schedule(doctor_id=doctor_id, user=user, doctor_data=doctor_data)
 
 
 @router.post('/update-schedule')
@@ -61,9 +59,14 @@ async def delete_schedule_endpoint(
 async def change_status_schedule_endpoint(
     appointment_service: Annotated[AppointmentService, Depends(appointment_service)],
     schedule_id: int,
-    user: UserModel = Depends(get_current_doctor),
+    is_available: bool,
+    user: UserModel = Depends(get_current_admin),
 ):
-    return await appointment_service.change_status_schedule(doctor=user, schedule_id=schedule_id)
+    return await appointment_service.change_status_schedule(
+        doctor=user,
+        schedule_id=schedule_id,
+        is_available=is_available,
+    )
 
 
 @router.post('/create-diagnose')
@@ -124,7 +127,7 @@ async def update_procedure_endpoint(
     procedure_service: Annotated[ProcedureService, Depends(procedure_service)],
     doctor: UserModel = Depends(get_current_doctor),
 ):
-    await procedure_service.update_procedure(
+    return await procedure_service.update_procedure(
         user_id=user_id,
         doctor=doctor,
         procedure_data=procedure_data,

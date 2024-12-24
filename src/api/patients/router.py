@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from src.api.doctors.dependencies import (appointment_service,
                                           medical_card_services)
@@ -65,8 +65,10 @@ async def create_medical_card_endpoint(
 async def get_my_medical_card_endpoint(
     med_services: Annotated[MedicalCardService, Depends(medical_card_services)],
     user: str = Depends(get_current_user),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
 ):
-    return await med_services.get_medical_card(user_id=user.id)
+    return await med_services.get_medical_card(user_id=user.id, page=page, limit=limit)
 
 
 @router.post("/change-doctor-in-medical-card")

@@ -11,3 +11,5 @@ class SServiceResponse(BaseModel):
     message: str
     title: str
     cost: float
+    requisites: str
+    service_id: int
