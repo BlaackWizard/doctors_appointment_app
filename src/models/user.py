@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Enum, Integer, String
+from datetime import date
+
+from sqlalchemy import Column, Date, Enum, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.db.connect import Base
@@ -21,4 +23,5 @@ class UserModel(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(Enum('patient', 'doctor', 'admin', name='role_type'), default=UserRoleEnum.PATIENT)
 
+    date = Column(Date, default=date.today())
     schedules = relationship("DoctorScheduleModel", back_populates="doctor", cascade="all, delete-orphan")

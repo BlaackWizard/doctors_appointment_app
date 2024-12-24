@@ -9,7 +9,8 @@ from ...schemas.analyze import SAnalyzeRequest
 from ...schemas.appointment import SScheduleCreate
 from ...schemas.medical_card import SDiagnosis, SProcedure, SVisits
 from ...services.analyze_service import AnalyzeService
-from ...services.auth_service import get_current_doctor
+from ...services.auth_service import (get_current_admin, get_current_doctor,
+                                      get_current_doctor_or_admin)
 from ...services.diagnose_service import DiagnoseService
 from ...services.procedure_service import ProcedureService
 from ...services.visit_service import VisitService
@@ -23,10 +24,11 @@ router = APIRouter(prefix='/doctors', tags=['Врачи'])
 async def create_schedule_endpoint(
     doctor_data: SScheduleCreate,
     appointment_service: Annotated[AppointmentService, Depends(appointment_service)],
-    user: UserModel = Depends(get_current_doctor),
+    doctor_id: int,
+    user: UserModel = Depends(get_current_doctor_or_admin),
 ):
 
-    appointment = await appointment_service.create_schedule(doctor=user, doctor_data=doctor_data)
+    appointment = await appointment_service.create_schedule(doctor_id=doctor_id, user=user, doctor_data=doctor_data)
     return appointment
 
 
@@ -34,10 +36,25 @@ async def create_schedule_endpoint(
 async def update_schedule_endpoint(
     doctor_data: SScheduleCreate,
     schedule_id: int,
+    doctor_id: int,
     appointment_service: Annotated[AppointmentService, Depends(appointment_service)],
-    user: UserModel = Depends(get_current_doctor),
+    user: UserModel = Depends(get_current_doctor_or_admin),
 ):
-    return await appointment_service.update_schedule(doctor=user, doctor_data=doctor_data, schedule_id=schedule_id)
+    return await appointment_service.update_schedule(
+        doctor_id=doctor_id, user=user,
+        doctor_data=doctor_data,
+        schedule_id=schedule_id,
+    )
+
+
+@router.post('/delete-schedule')
+async def delete_schedule_endpoint(
+    doctor_id: int,
+    schedule_id: int,
+    appointment_service: Annotated[AppointmentService, Depends(appointment_service)],
+    user: UserModel = Depends(get_current_doctor_or_admin),
+):
+    return await appointment_service.delete_schedule(schedule_id=schedule_id, user=user, doctor_id=doctor_id)
 
 
 @router.post('/change-status-schedule')
@@ -76,9 +93,11 @@ async def update_diagnose_endpoint(
 async def create_visit_endpoint(
     visit_service: Annotated[VisitService, Depends(visit_service)],
     visit_data: SVisits,
-    user: UserModel = Depends(get_current_doctor),
+    doctor_id: int,
+    user: UserModel = Depends(get_current_admin),
 ):
-    return await visit_service.create_visit(doctor_id=user.id, visit_data=visit_data)
+
+    return await visit_service.create_visit(doctor_id=doctor_id, visit_data=visit_data)
 
 
 @router.post("/create-procedure")

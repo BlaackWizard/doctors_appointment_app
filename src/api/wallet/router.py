@@ -10,7 +10,7 @@ from ...schemas.wallet import SWalletRequest
 from ...services.payment_service import PaymentService
 from .dependencies import payment_services, wallet_services
 
-router = APIRouter(prefix='/wallet', tags=['Кошелек'])
+router = APIRouter(prefix='/wallets', tags=['Кошелек'])
 
 
 @router.post('/create-wallet')
@@ -47,7 +47,7 @@ async def pay_service_endpoint(
     return await payment_services.payment_process(user_id=user.id, payment_data=user_data)
 
 
-@router.post('/get-receipt')
+@router.post('/receipt')
 async def get_receipt_endpoint(
     payment_services: Annotated[PaymentService, Depends(payment_services)],
     payment_id: int,

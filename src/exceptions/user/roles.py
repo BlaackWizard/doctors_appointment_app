@@ -34,3 +34,12 @@ class YouAreNotPatientException(ApplicationException):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Вы не являетесь пациентом, пройдите регистрацию",
         )
+
+
+class YouAreNotAdminException(ApplicationException):
+    @property
+    def message(self):
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Этот метод можно вызвать только администраторам',
+        )

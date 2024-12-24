@@ -13,6 +13,7 @@ from src.exceptions.auth.user import (NotFoundUserException,
                                       NotFoundUserExceptionOrIncorrectPassword,
                                       UserAlreadyExistsException,
                                       UserNotFoundOrUserIsNotDoctorException)
+from src.exceptions.user.roles import YouAreNotAdminException
 from src.repos.base import BaseRepo
 from src.repos.user import UserRepo
 from src.tasks.send_email import send_reminder_email
@@ -68,6 +69,50 @@ async def get_current_doctor(token: str = Depends(get_token)):
     return user
 
 
+async def get_current_doctor_or_admin(token: str = Depends(get_token)):
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+    except JWTError as e:
+        print(f"JWTError: {e}")
+        raise TokenIsNotValidException()
+
+    expire: int = payload.get("exp")
+    if not expire or int(expire) < int(datetime.now().timestamp()):
+        raise TokenExpiredException()
+
+    user_id: str = payload.get("sub")
+    if not user_id:
+        raise
+
+    user = await UserRepo.find_one(id=int(user_id))
+    if not user or str(user.role) != "doctor" or str(user.role) != 'admin':
+        raise UserNotFoundOrUserIsNotDoctorException().message
+
+    return user
+
+
+async def get_current_admin(token: str = Depends(get_token)):
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
+    except JWTError as e:
+        print(f"JWTError: {e}")
+        raise TokenIsNotValidException()
+
+    expire: int = payload.get("exp")
+    if not expire or int(expire) < int(datetime.now().timestamp()):
+        raise TokenExpiredException()
+
+    user_id: str = payload.get("sub")
+    if not user_id:
+        raise
+
+    user = await UserRepo.find_one(id=int(user_id))
+    if not user or str(user.role) != "admin":
+        raise YouAreNotAdminException().message
+
+    return user
+
+
 async def get_current_user(token: str = Depends(get_token)):
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
@@ -96,15 +141,15 @@ class UserAuth:
     appointment_repo: BaseRepo
     doctor_schedule_repo: BaseRepo
 
-    async def authenticate(self, email: str, password: str):
-        user = await self.repo.find_one(email=email)
+    async def authenticate(self, username: str, password: str):
+        user = await self.repo.find_one(username=username)
         if not user or not verify_password(password, user.hashed_password):
             raise NotFoundUserExceptionOrIncorrectPassword().message
 
         return user
 
     async def register_user(self, user_data):
-        existing_user = await self.repo.find_one(email=user_data.email)
+        existing_user = await self.repo.find_one(username=user_data.username)
         if existing_user:
             raise UserAlreadyExistsException().message
         hashed_password = get_password_hash(user_data.password)
@@ -119,7 +164,7 @@ class UserAuth:
         return "Пользователь успешно создан, теперь войдите в систему"
 
     async def login_user(self, user_data):
-        user = await self.authenticate(user_data.email, user_data.password)
+        user = await self.authenticate(user_data.username, user_data.password)
         access_token = create_access_token({"sub": str(user.id)})
         return access_token
 

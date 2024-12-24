@@ -44,30 +44,54 @@ class AppointmentService:
     appointment_repo: BaseRepo
     user_repo: BaseRepo
 
-    async def create_schedule(self, doctor, doctor_data):
-        doctor = await self.user_repo.find_one(id=doctor.id)
+    async def create_schedule(self, user, doctor_id, doctor_data):
+        doctor = await self.user_repo.find_one(id=doctor_id)
         if not doctor:
             raise NotFoundUserByIDException().message
 
-        schedule = await self.doctor_schedule_repo.find_one(
-            doctor_id=doctor.id,
-            day_of_week=doctor_data.day_of_week,
-            start_time=doctor_data.start_time,
-            end_time=doctor_data.end_time,
-        )
-        if schedule:
-            raise ThisScheduleAlreadyExistsException().message
+        if user.role == 'doctor':
+            schedule = await self.doctor_schedule_repo.find_one(
+                doctor_id=user.id,
+                day_of_week=doctor_data.day_of_week,
+                start_time=doctor_data.start_time,
+                end_time=doctor_data.end_time,
+            )
+            if schedule:
+                raise ThisScheduleAlreadyExistsException().message
 
-        schedule = await self.doctor_schedule_repo.add(
-            doctor_id=doctor.id,
-            day_of_week=doctor_data.day_of_week,
-            start_time=doctor_data.start_time,
-            end_time=doctor_data.end_time,
-        )
-        return schedule
+            schedule = await self.doctor_schedule_repo.add(
+                doctor_id=user.id,
+                day_of_week=doctor_data.day_of_week,
+                start_time=doctor_data.start_time,
+                end_time=doctor_data.end_time,
+            )
+            return schedule
 
-    async def check_schedule(self, doctor, schedule_id):
+        if user.role == 'admin':
+            schedule = await self.doctor_schedule_repo.find_one(
+                doctor_id=doctor_id,
+                day_of_week=doctor_data.day_of_week,
+                start_time=doctor_data.start_time,
+                end_time=doctor_data.end_time,
+            )
+            if schedule:
+                raise ThisScheduleAlreadyExistsException().message
+
+            schedule = await self.doctor_schedule_repo.add(
+                doctor_id=doctor_id,
+                day_of_week=doctor_data.day_of_week,
+                start_time=doctor_data.start_time,
+                end_time=doctor_data.end_time,
+            )
+            return schedule
+
+    async def check_schedule(self, doctor_id, schedule_id):
         schedule = await self.doctor_schedule_repo.find_one(id=schedule_id)
+        doctor = await self.user_repo.find_one(id=doctor_id, role='doctor')
+
+        if not doctor:
+            raise NotFoundDoctorOrUserIsNotDoctorException().message
+
         if not schedule:
             raise NotFoundScheduleException().message
 
@@ -79,16 +103,42 @@ class AppointmentService:
             raise DoctorCanNotChangeHisSlotWhilePatientsNotDoneTheirAppointmentException().message
         return True
 
-    async def update_schedule(self, doctor, doctor_data, schedule_id):
-        check = await self.check_schedule(doctor=doctor, schedule_id=schedule_id)
-        if check:
-            await self.doctor_schedule_repo.update(
-                model_id=schedule_id,
-                day_of_week=doctor_data.day_of_week,
-                start_time=doctor_data.start_time,
-                end_time=doctor_data.end_time,
-            )
-            return 'Обновлены данные слота'
+    async def update_schedule(self, doctor_id, user, doctor_data, schedule_id):
+        if user.role == 'admin':
+
+            check = await self.check_schedule(doctor_id=doctor_id, schedule_id=schedule_id)
+            if check:
+                await self.doctor_schedule_repo.update(
+                    model_id=schedule_id,
+                    day_of_week=doctor_data.day_of_week,
+                    start_time=doctor_data.start_time,
+                    end_time=doctor_data.end_time,
+                )
+                return 'Обновлены данные слота'
+
+        if user.role == 'admin':
+            check = await self.check_schedule(doctor_id=user.id, schedule_id=schedule_id)
+            if check:
+                await self.doctor_schedule_repo.update(
+                    model_id=schedule_id,
+                    day_of_week=doctor_data.day_of_week,
+                    start_time=doctor_data.start_time,
+                    end_time=doctor_data.end_time,
+                )
+                return 'Обновлены данные слота'
+
+    async def delete_schedule(self, doctor_id, user, schedule_id):
+        if user.role == 'admin':
+            check = await self.check_schedule(doctor_id=doctor_id, schedule_id=schedule_id)
+            if check:
+                await self.doctor_schedule_repo.delete_one(model_id=schedule_id)
+                return 'Удален слот'
+
+        if user.role == 'doctor':
+            check = await self.check_schedule(doctor_id=user.id, schedule_id=schedule_id)
+            if check:
+                await self.doctor_schedule_repo.delete_one(model_id=schedule_id)
+                return 'Удален слот'
 
     async def format_appointment(self, appointments):
         slots = defaultdict(list)
@@ -115,7 +165,7 @@ class AppointmentService:
         if schedule.doctor_id != doctor.id:
             raise ThisIsNotYoursScheduleException().message
 
-        await self.doctor_schedule_repo.schedule_change_status(schedule_id=schedule_id, status=False)
+        await self.doctor_schedule_repo.schedule_change_status(schedule_id=schedule_id, is_available=False)
 
         return 'Изменен статус слота'
 

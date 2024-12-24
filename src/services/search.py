@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from datetime import date
 
 from src.repos.base import BaseRepo
-from src.repos.medical_card import MedicalCardRepo, VisitsRepo
-from src.repos.user import UserRepo
 
 
 @dataclass
@@ -26,7 +24,5 @@ class SearchService:
         return user
 
     async def filter_visits_to_doctor(self, user_id: int, date: date):
-        visit = await self.visits_repo.find_one(date=date, patient_id=user_id)
+        visit = await self.visits_repo.find_one(visit_date=date, patient_id=user_id)
         return visit
-
-

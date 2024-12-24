@@ -11,10 +11,10 @@ from ...schemas.medical_card import SCreateMedicalCard
 from ...services.create_appointment_service import AppointmentService
 from ...services.medical_card_service import MedicalCardService
 
-router = APIRouter(prefix='/patient', tags=['Пациенты'])
+router = APIRouter(prefix='/patients', tags=['Пациенты'])
 
 
-@router.get("/show-all-slots/{doctor_id}/{date}")
+@router.get("/show-all-slots/")
 async def show_all_available_slots(
     appointment_services: Annotated[AppointmentService, Depends(appointment_service)],
     doctor_data: SAllSchedule = Depends(),

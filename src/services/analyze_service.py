@@ -1,9 +1,9 @@
 import os
 import uuid
-from fastapi import HTTPException
 from dataclasses import dataclass
 
-from src.exceptions.medical_card.card import NotFoundMedicalCardException, ThisIsNotYourMedicalCardException
+from src.exceptions.medical_card.card import (
+    NotFoundMedicalCardException, ThisIsNotYourMedicalCardException)
 from src.repos.base import BaseRepo
 from src.schemas.analyze import SAnalyzeRequest
 from src.utils.aws_connect import s3
@@ -39,7 +39,7 @@ class AnalyzeService:
         s3.upload_file(
             Filename=file_location,
             Bucket=settings.BUCKET_NAME,
-            Key=f"uploads/{safe_filename}"
+            Key=f"uploads/{safe_filename}",
         )
 
         os.remove(file_location)
@@ -50,6 +50,6 @@ class AnalyzeService:
             analyze_name=analyze_data.analyze_name,
             result=analyze_data.result,
             file=file_url,
-            medical_card_id=analyze_data.medical_card_id
+            medical_card_id=analyze_data.medical_card_id,
         )
         return 'Успешно создан анализ'

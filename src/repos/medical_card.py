@@ -1,4 +1,4 @@
-from sqlalchemy import update
+from sqlalchemy import func, select, update
 
 from src.db.connect import async_session_maker
 from src.models.analyzes import Analyzes
@@ -26,6 +26,13 @@ class VisitsRepo(SQLAlchemyRepo):
 
 class DiagnosisRepo(SQLAlchemyRepo):
     model = Diagnosis
+
+    @classmethod
+    async def total_count_diagnoses(cls):
+        async with async_session_maker() as session:
+            query = select(func.count(cls.model.id))
+            result = await session.execute(query)
+            return result.scalar()
 
 
 class AnalyzeRepo(SQLAlchemyRepo):

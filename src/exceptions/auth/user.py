@@ -14,7 +14,7 @@ class NotFoundUserExceptionOrIncorrectPassword(ApplicationException):
     def message(self):
         return HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Неправильная почта или пароль, проверьте почту и пароль',
+            detail='Неправильный логин или пароль',
         )
 
 

@@ -21,5 +21,5 @@ class SUserRegister(BaseModel):
 
 
 class SUserLogin(BaseModel):
-    email: EmailStr = Field(alias="Эл.почта")
+    username: str = Field(alias="Логин")
     password: str = Field(alias="Пароль")

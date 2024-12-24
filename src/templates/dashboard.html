@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Admin Dashboard</title>
+
+    <!-- Montserrat Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="grid-container">
+
+      <!-- Header -->
+      <header class="header">
+        <div class="menu-icon" onclick="openSidebar()">
+          <span class="material-icons-outlined">menu</span>
+        </div>
+        <div class="header-left">
+          <span class="material-icons-outlined">search</span>
+        </div>
+        <div class="header-right">
+          <span class="material-icons-outlined">notifications</span>
+          <span class="material-icons-outlined">email</span>
+          <span class="material-icons-outlined">account_circle</span>
+        </div>
+      </header>
+      <!-- End Header -->
+
+      <!-- Sidebar -->
+      <aside id="sidebar">
+        <div class="sidebar-title">
+          <div class="sidebar-brand">
+            <span class="material-icons-outlined">shopping_cart</span> STORE
+          </div>
+          <span class="material-icons-outlined" onclick="closeSidebar()">close</span>
+        </div>
+
+        <ul class="sidebar-list">
+          <li class="sidebar-list-item">
+            <a href="#" target="_blank">
+              <span class="material-icons-outlined">dashboard</span> Dashboard
+            </a>
+          </li>
+          <li class="sidebar-list-item">
+            <a href="#" target="_blank">
+              <span class="material-icons-outlined">inventory_2</span> Products
+            </a>
+          </li>
+          <li class="sidebar-list-item">
+            <a href="#" target="_blank">
+              <span class="material-icons-outlined">category</span> Categories
+            </a>
+          </li>
+          <li class="sidebar-list-item">
+            <a href="#" target="_blank">
+              <span class="material-icons-outlined">groups</span> Customers
+            </a>
+          </li>
+          <li class="sidebar-list-item">
+            <a href="#" target="_blank">
+              <span class="material-icons-outlined">fact_check</span> Inventory
+            </a>
+          </li>
+          <li class="sidebar-list-item">
+            <a href="#" target="_blank">
+              <span class="material-icons-outlined">poll</span> Reports
+            </a>
+          </li>
+          <li class="sidebar-list-item">
+            <a href="#" target="_blank">
+              <span class="material-icons-outlined">settings</span> Settings
+            </a>
+          </li>
+        </ul>
+      </aside>
+      <!-- End Sidebar -->
+
+      <!-- Main -->
+          <main class="main-container">
+            <div class="main-title">
+              <h2  style="color: black" >DASHBOARD</h2>
+            </div>
+
+            <div class="main-cards">
+
+      <div class="card">
+        <div class="card-inner">
+          <h3>Пациенты</h3>
+          <span class="material-icons-outlined">person</span>
+        </div>
+        <h1>{{ total_count_users }}</h1>
+      </div>
+
+      <div class="card">
+        <div class="card-inner">
+          <h3>Врачи</h3>
+          <span class="material-icons-outlined">medical_services</span>
+        </div>
+        <h1>{{ total_count_doctors }}</h1>
+      </div>
+
+      <div class="card">
+        <div class="card-inner">
+          <h3>Диагнозы</h3>
+          <span class="material-icons-outlined">health_and_safety</span>
+        </div>
+        <h1>{{ total_count_diagnosis }}</h1>
+      </div>
+
+      <div class="card">
+        <div class="card-inner">
+          <h3>Услуги</h3>
+          <span class="material-icons-outlined">miscellaneous_services</span>
+        </div>
+        <h1>{{ total_count_services }}</h1>
+      </div>
+
+    </div>
+
+
+        <div class="charts">
+
+          <div class="charts-card">
+            <h2 class="chart-title">Финансовое поступление за год</h2>
+            <div id="bar-chart"></div>
+          </div>
+
+          <div class="charts-card">
+            <h2 class="chart-title">Количество новых пациентов за год</h2>
+            <div id="area-chart"></div>
+          </div>
+
+        </div>
+      </main>
+      <!-- End Main -->
+
+    </div>
+
+    <!-- Scripts -->
+    <!-- ApexCharts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.5/apexcharts.min.js"></script>
+    <!-- Custom JS -->
+    <style>
+      body {
+  margin: 0;
+  padding: 0;
+  background-color: #caf0f8;
+  color: #9e9ea4;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.material-icons-outlined {
+  vertical-align: middle;
+  line-height: 1px;
+  font-size: 35px;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 260px 1fr 1fr 1fr;
+  grid-template-rows: 0.2fr 3fr;
+  grid-template-areas:
+    'sidebar header header header'
+    'sidebar main main main';
+  height: 100vh;
+}
+
+/* ---------- HEADER ---------- */
+.header {
+  grid-area: header;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px 0 30px;
+  box-shadow: 0 6px 7px -3px rgba(0, 0, 0, 0.35);
+}
+
+.menu-icon {
+  display: none;
+}
+
+/* ---------- SIDEBAR ---------- */
+
+#sidebar {
+  grid-area: sidebar;
+  height: 100%;
+  background-color: #263043;
+  overflow-y: auto;
+  transition: all 0.5s;
+  -webkit-transition: all 0.5s;
+}
+
+.sidebar-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 30px 30px 30px;
+  margin-bottom: 30px;
+}
+
+.sidebar-title > span {
+  display: none;
+}
+
+.sidebar-brand {
+  margin-top: 15px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.sidebar-list {
+  padding: 0;
+  margin-top: 15px;
+  list-style-type: none;
+}
+
+.sidebar-list-item {
+  padding: 20px 20px 20px 20px;
+  font-size: 18px;
+}
+
+.sidebar-list-item:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
+.sidebar-list-item > a {
+  text-decoration: none;
+  color: #9e9ea4;
+}
+
+.sidebar-responsive {
+  display: inline !important;
+  position: absolute;
+  /*
+    the z-index of the ApexCharts is 11
+    we want the z-index of the sidebar higher so that
+    the charts are not showing over the sidebar
+    on small screens
+  */
+  z-index: 12 !important;
+}
+
+/* ---------- MAIN ---------- */
+
+.main-container {
+  grid-area: main;
+  overflow-y: auto;
+  padding: 20px 20px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.main-title {
+  display: flex;
+  justify-content: space-between;
+}
+
+.main-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 25px;
+  border-radius: 5px;
+}
+
+.card:first-child {
+  background-color: #2962ff;
+}
+
+.card:nth-child(2) {
+  background-color: #ff6d00;
+}
+
+.card:nth-child(3) {
+  background-color: #2e7d32;
+}
+
+.card:nth-child(4) {
+  background-color: #d50000;
+}
+
+.card-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-inner > .material-icons-outlined {
+  font-size: 45px;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 60px;
+}
+
+.charts-card {
+  background-color: #f2e9e4;
+  margin-bottom: 20px;
+  padding: 25px;
+  box-sizing: border-box;
+  -webkit-column-break-inside: avoid;
+  border-radius: 5px;
+  box-shadow: 0 6px 7px -4px rgba(0, 0, 0, 0.2);
+}
+
+.chart-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+}
+
+/* ---------- MEDIA QUERIES ---------- */
+
+/* Medium <= 992px */
+
+@media screen and (max-width: 992px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: 0.2fr 3fr;
+    grid-template-areas:
+      'header'
+      'main';
+  }
+
+  #sidebar {
+    display: none;
+  }
+
+  .menu-icon {
+    display: inline;
+  }
+
+  .sidebar-title > span {
+    display: inline;
+  }
+}
+
+/* Small <= 768px */
+
+@media screen and (max-width: 768px) {
+  .main-cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .charts {
+    grid-template-columns: 1fr;
+    margin-top: 30px;
+  }
+}
+
+/* Extra Small <= 576px */
+
+@media screen and (max-width: 576px) {
+  .hedaer-left {
+    display: none;
+  }
+}
+
+    </style>
+       <script>
+    async function getFinancialReceipts(year) {
+      const response = await fetch(`http://localhost:8000/reports/financial-receipts/${year}`);
+    if (!response.ok) {
+      throw new Error('Ошибка при получении данных');
+    }
+    const data = await response.json();
+    return data;
+  }
+
+  // Данные для диаграммы
+  async function renderChart() {
+    try {
+      const year = 2024;
+      const apiData = await getFinancialReceipts(year);
+
+      // Преобразуем данные для диаграммы
+      const monthlyData = apiData.map(item => item.monthly_income);
+      const monthNames = [
+        "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    ];
+    const MonthData = apiData.map(item => monthNames[item.month - 1]);
+      var ChartsOptions = {
+        series: [{
+          name: "Общая сумма",
+          data: monthlyData
+        }],
+        chart: {
+          height: 350,
+          type: 'line',
+          toolbar: {
+            show: false
+          },
+          zoom: {
+            enabled: false
+          }
+        },
+        dataLabels: {
+          enabled: false
+        },
+        stroke: {
+          curve: 'straight'
+        },
+        title: {
+          align: 'left'
+        },
+        grid: {
+          row: {
+            colors: ['#f3f3f3', 'transparent'], // альтернативные цвета строк
+            opacity: 0.5
+          },
+        },
+        xaxis: {
+          categories: MonthData,
+        }
+      };
+
+      var barChart = new ApexCharts(document.querySelector("#bar-chart"), ChartsOptions);
+      barChart.render();
+    } catch (error) {
+      console.error('Ошибка:', error);
+    }
+  }
+
+  // Отображаем диаграмму
+  renderChart();
+  async function CountUsers(year) {
+      const response = await fetch(`http://localhost:8000/reports/count-users/${year}`);
+    if (!response.ok) {
+      throw new Error('Ошибка при получении данных');
+    }
+    const data = await response.json();
+    return data;
+  }
+
+async function renderAreaChart() {
+    const year = 2024;
+
+    // Получаем данные через API
+    const apiData = await CountUsers(year);
+
+    // Массив с количеством пользователей
+    const monthlyDataUsers = apiData.map(item => item.monthly_count_users);
+
+    // Преобразуем номера месяцев в названия
+    const monthNames = [
+        "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    ];
+    const MonthData = apiData.map(item => monthNames[item.month - 1]);
+
+    // Опции графика
+    var options = {
+        series: [{
+            name: "Пациенты",
+            data: monthlyDataUsers
+        }],
+        chart: {
+            type: 'area',
+            height: 350,
+            zoom: { enabled: false }
+        },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'straight' },
+        title: {
+            text: "Количество пациентов месяца", // Название графика
+            align: 'left'
+        },
+        labels: MonthData, // Названия месяцев
+        xaxis: {
+            type: 'category', // Указываем категорию, чтобы ось X отображала текст
+            title: { text: "Месяц" }
+        },
+        yaxis: {
+            title: { text: "Количество пациентов" }
+        },
+        legend: { horizontalAlign: 'left' }
+    };
+
+    // Рендеринг графика
+    var chart = new ApexCharts(document.querySelector("#area-chart"), options);
+    chart.render();
+}
+
+renderAreaChart();
+
+</script>
+  </body>
+</html>
