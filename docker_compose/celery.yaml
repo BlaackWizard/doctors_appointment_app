@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  redis:
+    image: "redis:alpine"
+    container_name: my-redis-container
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+  celery:
+    image: my-app-image
+    container_name: my-celery-container
+    command: celery -A src.tasks.celery:celery_app worker --loglevel=info
+    volumes:
+      - ..:/app
+    depends_on:
+      - redis
+      - main-app
+    networks:
+      - backend
+
+  flower:
+      image: my-app-image
+      container_name: my-flower-container
+      command: celery -A src.tasks.celery flower --basic_auth=admin:password123
+      ports:
+        - "5555:5555"
+      depends_on:
+        - redis
+        - celery
+      networks:
+        - backend
+
+  beat:
+      image: my-app-image
+      container_name: my-beat-container
+      command: celery -A src.tasks.celery beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+      volumes:
+        - ..:/app
+      depends_on:
+        - redis
+        - main-app
+      networks:
+        - backend
+volumes:
+  redis_data:
+    driver: local

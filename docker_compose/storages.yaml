@@ -8,8 +8,12 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    env_file:
-     - ../.env
+    environment:
+      - POSTGRES_DB=doctors_appointment_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - backend
 
 volumes:
   postgres_data:

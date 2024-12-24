@@ -13,7 +13,6 @@ from src.exceptions.auth.user import (NotFoundUserException,
                                       NotFoundUserExceptionOrIncorrectPassword,
                                       UserAlreadyExistsException,
                                       UserNotFoundOrUserIsNotDoctorException)
-from src.exceptions.user.roles import YouAreNotAdminException
 from src.repos.base import BaseRepo
 from src.repos.user import UserRepo
 from src.tasks.send_email import send_reminder_email
@@ -56,7 +55,7 @@ def validate_token_expiry(expire: int):
         raise TokenExpiredException()
 
 
-async def get_user_by_token(token: str, role1: str = None, role2: str = None):
+async def get_user_by_token(token: str, role: str = None):
     payload = decode_jwt_token(token)
     validate_token_expiry(payload.get("exp"))
 
@@ -65,7 +64,7 @@ async def get_user_by_token(token: str, role1: str = None, role2: str = None):
         raise TokenIsNotValidException()
 
     user = await UserRepo.find_one(id=int(user_id))
-    if not user or (role1 and str(user.role) != role1 or role2 and str(user.role) != role2):
+    if not user or (role and str(user.role) != role):
         raise UserNotFoundOrUserIsNotDoctorException().message
 
     return user
@@ -81,11 +80,6 @@ async def get_current_doctor(token: str = Depends(get_token)):
 
 async def get_current_admin(token: str = Depends(get_token)):
     return await get_user_by_token(token, role="admin")
-
-
-async def get_current_doctor_or_admin(token: str = Depends(get_token)):
-    user = await get_user_by_token(token, role1="doctor", role2="admin")
-    return user
 
 
 @dataclass

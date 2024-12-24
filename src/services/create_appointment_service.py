@@ -64,7 +64,7 @@ class AppointmentService:
             start_time=doctor_data.start_time,
             end_time=doctor_data.end_time,
         )
-        return schedule
+        return schedule.id
 
     async def create_schedule(self, user, doctor_id, doctor_data):
         if user.role == 'admin':
@@ -97,8 +97,8 @@ class AppointmentService:
             raise DoctorCanNotChangeHisSlotWhilePatientsNotDoneTheirAppointmentException().message
         return True
 
-    async def update_schedule(self, doctor_id, user, doctor_data, schedule_id):
-        check = await self.check_schedule(doctor_id, schedule_id)
+    async def _update_schedule(self, user_id, doctor_data, schedule_id):
+        check = await self.check_schedule(user_id, schedule_id)
         if not check:
             return
 
@@ -110,13 +110,25 @@ class AppointmentService:
         )
         return 'Обновлены данные слота'
 
-    async def delete_schedule(self, doctor_id, user, schedule_id):
+    async def update_schedule(self, doctor_id, user, doctor_data, schedule_id):
+        if user.role == 'admin':
+            return await self._update_schedule(user_id=doctor_id, doctor_data=doctor_data, schedule_id=schedule_id)
+        if user.role == 'doctor':
+            return await self._update_schedule(user_id=user.id, doctor_data=doctor_data, schedule_id=schedule_id)
+
+    async def _delete_schedule(self, doctor_id, schedule_id):
         check = await self.check_schedule(doctor_id, schedule_id)
         if not check:
             return
 
         await self.doctor_schedule_repo.delete_one(model_id=schedule_id)
         return 'Удален слот'
+
+    async def delete_schedule(self, doctor_id, user, schedule_id):
+        if user.role == 'admin':
+            return await self._delete_schedule(doctor_id=doctor_id, schedule_id=schedule_id)
+        if user.role == 'doctor':
+            return await self._delete_schedule(doctor_id=user.id, schedule_id=schedule_id)
 
     async def format_appointment(self, appointments):
         slots = defaultdict(list)
@@ -191,7 +203,9 @@ class AppointmentService:
             patient_id=user.id,
             schedule_id=doctor_data.schedule_id,
         )
-        if exists_appointment or exists_appointment.date == date_today:
+        if exists_appointment:
+            if exists_appointment.date == date_today:
+                raise AppointmentAlreadyExistsException().message
             raise AppointmentAlreadyExistsException().message
 
         await self.appointment_repo.add(
