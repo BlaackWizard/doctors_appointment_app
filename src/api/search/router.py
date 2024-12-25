@@ -4,6 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from src.api.search.dependencies import search_service
+from src.models.user import UserModel
+from src.services.auth_service import get_current_admin
 from src.services.search import SearchService
 
 router = APIRouter(prefix='/search', tags=['Поисковик'])
@@ -13,6 +15,7 @@ router = APIRouter(prefix='/search', tags=['Поисковик'])
 async def find_by_full_name(
     search_services: Annotated[SearchService, Depends(search_service)],
     full_name: str,
+    user: UserModel = Depends(get_current_admin),
 ):
     return await search_services.find_by_full_name(full_name)
 
@@ -21,6 +24,7 @@ async def find_by_full_name(
 async def find_by_phone_number(
     search_services: Annotated[SearchService, Depends(search_service)],
     phone_number: str,
+    user: UserModel = Depends(get_current_admin),
 ):
     return await search_services.find_by_phone_number(phone_number)
 
@@ -29,6 +33,7 @@ async def find_by_phone_number(
 async def find_by_medical_card_id(
     search_services: Annotated[SearchService, Depends(search_service)],
     medical_card_id: int,
+    user: UserModel = Depends(get_current_admin),
 ):
     return await search_services.find_by_medical_card_id(medical_card_id)
 
@@ -38,5 +43,6 @@ async def find_by_date_visit_to_doctor(
     search_services: Annotated[SearchService, Depends(search_service)],
     date: date,
     user_id: int,
+    user: UserModel = Depends(get_current_admin),
 ):
     return await search_services.filter_visits_to_doctor(date=date, user_id=user_id)

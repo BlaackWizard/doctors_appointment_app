@@ -11,8 +11,8 @@ from src.exceptions.auth.auth_token import (TokenExpiredException,
                                             TokenIsNotValidException)
 from src.exceptions.auth.user import (NotFoundUserException,
                                       NotFoundUserExceptionOrIncorrectPassword,
-                                      UserAlreadyExistsException,
-                                      UserNotFoundOrUserIsNotDoctorException)
+                                      PermissionDeniedForUserException,
+                                      UserAlreadyExistsException)
 from src.repos.base import BaseRepo
 from src.repos.user import UserRepo
 from src.tasks.send_email import send_reminder_email
@@ -39,7 +39,7 @@ def create_access_token(data: dict) -> str:
 def get_token(request: Request):
     token = request.cookies.get("user_access_token")
     if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token not found")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Вы не авторизованы!")
     return token
 
 
@@ -65,7 +65,7 @@ async def get_user_by_token(token: str, role: str = None):
 
     user = await UserRepo.find_one(id=int(user_id))
     if not user or (role and str(user.role) != role):
-        raise UserNotFoundOrUserIsNotDoctorException().message
+        raise PermissionDeniedForUserException().message
 
     return user
 
@@ -107,7 +107,7 @@ class UserAuth:
             phone_number=user_data.phone_number,
             role=user_data.role,
         )
-        return "User successfully registered, please log in."
+        return "Пользователь успешно зарегистрировался, теперь войдите в систему"
 
     async def login_user(self, user_data):
         user = await self.authenticate(user_data.username, user_data.password)

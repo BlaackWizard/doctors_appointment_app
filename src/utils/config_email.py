@@ -10,7 +10,6 @@ class EmailSettings(BaseSettings):
     MAIL_SERVER: str
     MAIL_STARTTLS: bool
     MAIL_SSL_TLS: bool
-    JWT_SECRET_KEY: str
 
     class Config:
         env_file = ".env_email"

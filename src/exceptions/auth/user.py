@@ -50,3 +50,12 @@ class UserNotPatientException(ApplicationException):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Данный пользователь не является пациентом, пожалуйста зарегистрируйтесь и потом войдите в систему',
         )
+
+
+class PermissionDeniedForUserException(ApplicationException):
+    @property
+    def message(self):
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Доступ к ресурсу запрещен',
+        )
