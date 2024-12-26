@@ -14,3 +14,6 @@ class Diagnosis(Base):
     date = Column(Date)
 
     medical_card = relationship("MedicalCardModel", back_populates="diagnosis")
+
+    def __str__(self):
+        return f'Диагноз #{id}'

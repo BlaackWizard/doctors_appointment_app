@@ -16,3 +16,6 @@ class Procedure(Base):
     medical_card_id = Column(Integer, ForeignKey('medical_cards.id'))
 
     medical_card = relationship("MedicalCardModel", back_populates="procedures")
+
+    def __str__(self):
+        return f'Процедура: {self.procedure_name}'

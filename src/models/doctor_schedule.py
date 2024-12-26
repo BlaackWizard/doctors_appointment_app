@@ -14,4 +14,7 @@ class DoctorScheduleModel(Base):
     end_time = Column(Time, nullable=False)
     is_available = Column(Boolean, default=True)
 
-    doctor = relationship("UserModel", back_populates="schedules")
+    doctor = relationship("UserModel", back_populates="schedules", foreign_keys=[doctor_id])
+
+    def __str__(self):
+        return f'{self.start_time}-{self.end_time} {self.day_of_week}'

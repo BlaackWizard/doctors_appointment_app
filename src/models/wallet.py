@@ -10,3 +10,6 @@ class Wallet(Base):
 
     balance = Column(Float, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
+
+    def __str__(self):
+        return f'Кошелек: #{self.id}'

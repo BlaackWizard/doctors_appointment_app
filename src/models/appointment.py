@@ -16,5 +16,8 @@ class AppointmentModel(Base):
     status = Column(Enum('ожидание', 'подтверждено', 'отменено', name="appointment_status"), nullable=False)
     is_verified = Column(Boolean, default=False)
 
-    doctor = relationship("UserModel", foreign_keys=[doctor_id])
-    patient = relationship("UserModel", foreign_keys=[patient_id])
+    doctor = relationship("UserModel", back_populates="appointment_with_doctor", foreign_keys=[doctor_id])
+    patient = relationship("UserModel", back_populates="appointment_with_patient", foreign_keys=[patient_id])
+
+    def __str__(self):
+        return f"Запись #{self.id}"

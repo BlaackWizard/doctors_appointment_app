@@ -28,7 +28,6 @@ class SScheduleCreate(BaseModel):
 class SAppointmentCreate(BaseModel):
     doctor_id: int = Field(alias="ID врача")
     schedule_id: int = Field(alias="ID слота")
-    date_appointment: datetime.datetime = Field(alias="Время визита")
 
 
 class SAppointmentResponse(BaseModel):

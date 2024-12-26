@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
@@ -31,11 +32,16 @@ async def show_all_available_slots(
 async def appointment_with_the_doctor_endpoint(
     appointment_services: Annotated[AppointmentService, Depends(appointment_service)],
     doctor_data: SAppointmentCreate,
+    date_appointment: date,
     user: str = Depends(get_current_user),
 
 ):
 
-    return await appointment_services.create_appointment(doctor_data, user.id)
+    return await appointment_services.create_appointment(
+        doctor_data=doctor_data,
+        user_id=user.id,
+        date_str=date_appointment,
+    )
 
 
 @router.post("/history-appointments")

@@ -14,3 +14,6 @@ class Analyzes(Base):
     medical_card_id = Column(Integer, ForeignKey('medical_cards.id'))
 
     medical_card = relationship("MedicalCardModel", back_populates="analyzes")
+
+    def __str__(self):
+        return f'Анализ: {self.analyze_name}'

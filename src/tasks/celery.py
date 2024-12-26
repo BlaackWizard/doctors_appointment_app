@@ -11,6 +11,11 @@ celery_app = Celery(
 
 celery_app.conf.update(
     task_serializer='json',
-    accept_content=['json'],
     result_serializer='json',
+    accept_content=['json'],
+    enable_utc=True,
+    timezone='Asia/Tashkent',
+    broker_connection_retry_on_startup=True,
+    task_acks_late=True,
+    task_reject_on_worker_lost=True,
 )

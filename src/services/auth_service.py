@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+import pytz
 from fastapi import Depends, HTTPException, Request, Response, status
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -19,6 +20,8 @@ from src.tasks.send_email import send_reminder_email
 from src.tasks.tasks_token import decode_url_safe_token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+tz = pytz.timezone('Asia/Tashkent')
+utc = pytz.utc
 
 
 def get_password_hash(password: str) -> str:
@@ -135,10 +138,16 @@ class UserAuth:
         schedule = await self.doctor_schedule_repo.find_one(id=appointment.schedule_id)
         await self.doctor_schedule_repo.update(model_id=schedule.id, is_available=False)
 
-        appointment_time = appointment.date - timedelta(hours=24)
+        appointment_datetime = datetime.combine(appointment.date, schedule.start_time)
+        appointment_datetime_utc = appointment_datetime.astimezone(utc)
+        reminder_24_hours = appointment_datetime_utc - timedelta(hours=24)
+        reminder_1_hour = appointment_datetime_utc - timedelta(hours=1)
         send_reminder_email.apply_async(
-            args=[user_email, appointment.date, "24 hours"],
-            eta=appointment_time,
+            args=(user_email, appointment_datetime_utc, "24 часа"),  # Передаем время в ISO формате
+            eta=reminder_24_hours,
         )
-
+        send_reminder_email.apply_async(
+            args=(user_email, appointment_datetime_utc, "1 час"),  # Передаем время в ISO формате
+            eta=reminder_1_hour,
+        )
         return Response('The appointment was successfully verified!')

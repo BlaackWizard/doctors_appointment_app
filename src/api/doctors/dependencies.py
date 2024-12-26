@@ -43,6 +43,7 @@ def visit_service():
         visits_repo=VisitsRepo,
         user_repo=UserRepo,
         appointment_repo=AppointmentRepo,
+        medical_card_repo=MedicalCardRepo,
     )
 
 

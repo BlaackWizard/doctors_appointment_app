@@ -58,13 +58,19 @@ class AppointmentService:
         if schedule:
             raise ThisScheduleAlreadyExistsException().message
 
-        schedule = await self.doctor_schedule_repo.add(
+        await self.doctor_schedule_repo.add(
             doctor_id=doctor_id,
             day_of_week=doctor_data.day_of_week,
             start_time=doctor_data.start_time,
             end_time=doctor_data.end_time,
         )
-        return schedule.id
+        schedule = await self.doctor_schedule_repo.find_one(
+            doctor_id=doctor_id,
+            day_of_week=doctor_data.day_of_week,
+            start_time=doctor_data.start_time,
+            end_time=doctor_data.end_time,
+        )
+        return schedule
 
     async def create_schedule(self, user, doctor_id, doctor_data):
         if user.role == 'admin':
@@ -181,7 +187,40 @@ class AppointmentService:
         appointments = await self.appointment_repo.find_all_by_filters(patient_id=user_id)
         return await self.format_appointment(appointments)
 
-    async def create_appointment(self, doctor_data, user_id):
+    @staticmethod
+    def _validate_date_and_day(date_str, day_of_week):
+        if isinstance(date_str, datetime.date):
+            user_date = date_str
+        else:
+            try:
+                user_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+            except ValueError:
+                raise ValueError("Неверный формат даты. Используйте год-месяц-день (напр., 2024-12-25).")
+
+        weekday = user_date.weekday()
+        weekdays_mapping = {
+            "Понедельник": 0,
+            "Вторник": 1,
+            "Среда": 2,
+            "Четверг": 3,
+            "Пятница": 4,
+            "Суббота": 5,
+            "Воскресенье": 6,
+        }
+
+        if weekdays_mapping.get(day_of_week) != weekday:
+            raise ValueError(
+                f"Дата {date_str} не соответствует дню недели {day_of_week}.",
+            )
+        today = datetime.date.today()
+        start_of_week = today - datetime.timedelta(days=today.weekday())
+        end_of_week = start_of_week + datetime.timedelta(days=6)
+
+        if not (start_of_week <= user_date <= end_of_week):
+            raise ValueError(f"Дата {date_str} не находится на текущей неделе.")
+
+    async def create_appointment(self, doctor_data, user_id, date_str):
+
         schedule = await self.doctor_schedule_repo.find_one(id=doctor_data.schedule_id)
         user = await self.user_repo.find_one(id=user_id)
         doctor = await self.user_repo.find_one(id=doctor_data.doctor_id, role='doctor')
@@ -198,6 +237,8 @@ class AppointmentService:
         if doctor_data.doctor_id != schedule.doctor_id:
             raise ThisIsAnotherDoctorException().message
 
+        self._validate_date_and_day(date_str, schedule.day_of_week)
+
         exists_appointment = await self.appointment_repo.find_one(
             doctor_id=doctor_data.doctor_id,
             patient_id=user.id,
@@ -211,8 +252,8 @@ class AppointmentService:
         await self.appointment_repo.add(
             doctor_id=doctor_data.doctor_id,
             patient_id=user.id,
+            date=date_str,
             schedule_id=doctor_data.schedule_id,
-            date=doctor_data.date_appointment,
             status="ожидание",
         )
         appointment = await self.appointment_repo.find_one(
@@ -225,11 +266,11 @@ class AppointmentService:
         token = create_url_safe_token({'email': user.email, 'appointment_id': appointment.id})
         link = f"http://{settings.DOMAIN}/auth/verify/{token}"
         message = f"""
-            Привет! Ты отправил запрос на запись к врачу {doctor.full_name}
-            Чтобы подтвердить запись, перейди по этой ссылке: {link}
-        """
+                Привет! Ты отправил запрос на запись к врачу {doctor.full_name}
+                Чтобы подтвердить запись, перейди по этой ссылке: {link}
+            """
         send_confirmation_email.delay(patient_email=user.email, message=message)
-        return f'Создана новая запись, мы отправили вам на почту ссылку на подтверждение записи к {doctor.full_name}'
+        return f"Создана новая запись, мы отправили вам на почту ссылку на подтверждение записи к {doctor.full_name}"
 
     async def my_appointments(self, doctor_id):
         doctor = await self.user_repo.find_one(id=doctor_id, role='doctor')

@@ -19,3 +19,17 @@ class MedicalCardModel(Base):
     diagnosis = relationship("Diagnosis", back_populates="medical_card")
     analyzes = relationship("Analyzes", back_populates="medical_card")
     procedures = relationship("Procedure", back_populates="medical_card")
+
+    patient = relationship(
+        "UserModel",
+        back_populates="medical_cards_as_patient",
+        foreign_keys=[patient_id],
+    )
+    doctor = relationship(
+        "UserModel",
+        back_populates="medical_cards_as_doctor",
+        foreign_keys=[doctor_id],
+    )
+
+    def __str__(self):
+        return f'Мед.карта #{self.id}'
