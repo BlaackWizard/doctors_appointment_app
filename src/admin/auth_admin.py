@@ -1,10 +1,10 @@
 from fastapi import HTTPException
 from sqladmin.authentication import AuthenticationBackend
 from starlette.requests import Request
-from starlette.responses import RedirectResponse
-from src.services.auth_service import create_access_token, get_user_by_token
+
 from src.api.patients.dependencies import user_services
 from src.exceptions.auth.user import NotFoundUserExceptionOrIncorrectPassword
+from src.services.auth_service import create_access_token, get_user_by_token
 
 
 class AdminAuth(AuthenticationBackend):

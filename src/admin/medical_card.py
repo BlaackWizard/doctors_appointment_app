@@ -1,4 +1,5 @@
 from sqladmin import ModelView
+
 from src.models.medical_card import MedicalCardModel
 
 
@@ -8,7 +9,7 @@ class MedicalCardAdmin(ModelView, model=MedicalCardModel):
         MedicalCardModel.doctor,
         MedicalCardModel.patient_fullname,
         MedicalCardModel.birth_day,
-        MedicalCardModel.contacts
+        MedicalCardModel.contacts,
     ]
     name = 'Мед.карта'
     name_plural = "Мед.карты"

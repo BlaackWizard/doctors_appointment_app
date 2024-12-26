@@ -1,4 +1,5 @@
 from sqladmin import ModelView
+
 from src.models.appointment import AppointmentModel
 
 

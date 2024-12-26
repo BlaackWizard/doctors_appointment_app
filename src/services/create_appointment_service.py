@@ -13,7 +13,8 @@ from src.exceptions.appointment.schedule import (
     DoctorCanNotChangeHisSlotWhilePatientsNotDoneTheirAppointmentException,
     NotFoundScheduleException, SlotIsOccupiedException,
     ThisScheduleAlreadyExistsException)
-from src.exceptions.auth.user import NotFoundUserByIDException
+from src.exceptions.auth.user import (NotFoundUserByIDException,
+                                      PermissionDeniedForUserException)
 from src.exceptions.user.roles import YouAreNotDoctorException
 from src.repos.base import BaseRepo
 from src.tasks.send_email import send_confirmation_email
@@ -79,7 +80,7 @@ class AppointmentService:
         if user.role == 'doctor' and user.id == doctor_id:
             return await self._check_and_create_schedule(user, user.id, doctor_data)
 
-        raise YouAreNotDoctorException().message
+        raise PermissionDeniedForUserException().message
 
     async def check_schedule(self, doctor_id, schedule_id):
         doctor = await self.user_repo.find_one(id=doctor_id, role='doctor')

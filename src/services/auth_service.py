@@ -110,7 +110,8 @@ class UserAuth:
             phone_number=user_data.phone_number,
             role=user_data.role,
         )
-        return "Пользователь успешно зарегистрировался, теперь войдите в систему"
+        user = await self.repo.find_one(email=user_data.email)
+        return {"Ваш user id": user.id}
 
     async def login_user(self, user_data):
         user = await self.authenticate(user_data.username, user_data.password)

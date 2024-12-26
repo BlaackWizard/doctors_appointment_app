@@ -14,10 +14,9 @@ async def register_user_endpoint(
     user_data: SUserRegister,
     user_services: Annotated[UserAuth, Depends(user_services)],
 ):
-    await user_services.register_user(
+    return await user_services.register_user(
         user_data=user_data,
     )
-    return Response("Пользователь успешно создан")
 
 
 @router.post("/login")

@@ -98,11 +98,10 @@ async def update_diagnose_endpoint(
 async def create_visit_endpoint(
     visit_service: Annotated[VisitService, Depends(visit_service)],
     visit_data: SVisits,
-    doctor_id: int,
     user: UserModel = Depends(get_current_admin),
 ):
 
-    return await visit_service.create_visit(doctor_id=doctor_id, visit_data=visit_data)
+    return await visit_service.create_visit(visit_data=visit_data)
 
 
 @router.post("/create-procedure")

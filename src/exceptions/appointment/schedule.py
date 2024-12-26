@@ -28,3 +28,12 @@ class DoctorCanNotChangeHisSlotWhilePatientsNotDoneTheirAppointmentException(App
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Вы не можете изменить слот пока пользователи не посетят вас",
         )
+
+
+class SlotNotBelongsToDoctorException(ApplicationException):
+    @property
+    def message(self):
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Слот ID не принадлежит врачу с ID врачом.",
+        )

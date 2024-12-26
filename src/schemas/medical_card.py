@@ -21,7 +21,7 @@ class SDiagnosisResponse(BaseModel):
 
 
 class SVisits(BaseModel):
-    patient_id: int
+    appointment_id: int
     visit_date: date = Field(alias="Дата визита")
 
 

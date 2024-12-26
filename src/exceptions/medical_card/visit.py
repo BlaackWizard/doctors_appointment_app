@@ -9,5 +9,5 @@ class BeforeCreateVisitPatientMustCreateAppointmentException(ApplicationExceptio
         return HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Для того чтобы создать посещение, '
-                   'Пациент должен отправить вам запись на посещение',
+                   'Пациент должен записаться к врачу',
         )

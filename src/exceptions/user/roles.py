@@ -24,7 +24,10 @@ class PatientDoctorConflictException(ApplicationException):
 class YouAreNotDoctorException(ApplicationException):
     @property
     def message(self):
-        return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Вы не являетесь врачом!")
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Пользователь не найден в базе данных или пользователь не является врачом",
+        )
 
 
 class YouAreNotPatientException(ApplicationException):

@@ -50,7 +50,7 @@ class MedicalCardService:
             patient_id=patient_id,
             doctor_id=doctor_id,
         )
-        return medical_card
+        return {"Ваш id мед.карты": medical_card.id}
 
     async def get_medical_card(self, user_id: int, page: int = 1, limit: int = 10):
         medical_card = await self.medical_card_repo.find_one(patient_id=user_id)

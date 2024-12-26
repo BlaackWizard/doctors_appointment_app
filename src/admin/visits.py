@@ -1,4 +1,5 @@
 from sqladmin import ModelView
+
 from src.models.visits import Visits
 
 
